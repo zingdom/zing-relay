@@ -76,7 +76,7 @@ function cacheDrain() {
             buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
             buffer[15] = value.rssi_count;
 
-            console.log(chalk.dim('[CACHE]'), buffer);
+            console.log(chalk.dim('[MQTT] '), buffer);
 
             _mqClient.publish('scan', buffer);
             return;

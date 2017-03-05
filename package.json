@@ -1,0 +1,22 @@
+{
+  "name": "zing-spot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Wang",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "chalk": "1.x",
+    "figlet": "1.x",
+    "getmac": "^1.2.1",
+    "lodash": "4.x",
+    "lru-cache": "^4.0.2",
+    "mqtt": "^2.4.0",
+    "noble": "1.x",
+    "sprintf-js": "^1.0.3",
+    "yargs": "7.x"
+  }
+}

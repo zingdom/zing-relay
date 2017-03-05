@@ -11,6 +11,10 @@
     },
     "author": "Daniel Wang",
     "license": "GPL-3.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fmcode/zing-spot.git"
+    },
     "dependencies": {
         "chalk": "1.x",
         "figlet": "1.x",

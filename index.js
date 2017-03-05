@@ -14,7 +14,8 @@ const sprintf = require('sprintf-js').sprintf;
 // ----- global variables
 let _addr = null;
 let _mqClient = null;
-let _cache = LRU(256);
+let _mqCache = LRU(256);
+let _advertCache = LRU(1024);
 
 function normalizeAddr(addr) {
     let a = addr.replace(/[^0-9A-Fa-f]/g, '');
@@ -36,36 +37,45 @@ function addrToBuffer(addr, buffer, index) {
 }
 
 function cacheAdd(addr, rssi, name) {
-    let entry = _cache.get(addr);
+    let advEntry = _advertCache.get(addr);
+    if (!advEntry) {
+        advEntry = {
+            count: 0
+        };
+        _advertCache.set(addr, advEntry);
+    }
+    advEntry.count++;
 
-    if (!entry) {
-        entry = {
+    let mqEntry = _mqCache.get(addr);
+    if (!mqEntry) {
+        mqEntry = {
             'addr': addr,
             'rssi_total': 0,
             'rssi_count': 0
         };
-        _cache.set(addr, entry);
+        _mqCache.set(addr, mqEntry);
     }
 
     // timestamp
-    entry.time = new Date().getTime();
+    mqEntry.time = new Date().getTime();
 
     // rssi
     if (rssi < 0) { // ignore invalid RSSI (rssi >= 0)
-        entry.rssi_total += rssi;
-        entry.rssi_count += 1;
+        mqEntry.rssi_total += rssi;
+        mqEntry.rssi_count += 1;
     }
 
     // device name
     if (name) {
-        entry.name = name;
+        mqEntry.name = name;
     }
 }
 
 function cacheDrain() {
-    _cache.rforEach(function(value, key) {
-        if (value.rssi_count > 1) {
-            _cache.del(value.addr);
+    _mqCache.rforEach(function(value, key) {
+        let advEntry = _advertCache.peek(value.addr);
+        if (advEntry && advEntry.count > 1 && value.rssi_count >= 1) {
+            _mqCache.del(value.addr);
 
             let age = Math.round((new Date().getTime() - value.time) / 65.536);
             let buffer = new Buffer(16);
@@ -159,7 +169,7 @@ function setup() {
 }
 
 setInterval(function() {
-    if (!_cache.length || !_mqClient || !_mqClient.connected) {
+    if (!_mqCache.length || !_mqClient || !_mqClient.connected) {
         return;
     }
 

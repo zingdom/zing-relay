@@ -10,12 +10,61 @@ const mqtt = require('mqtt');
 const noble = require('noble');
 const package_json = require('./package.json');
 const sprintf = require('sprintf-js').sprintf;
+const yargs = require('yargs');
 
 // ----- global variables
 let _addr = null;
 let _mqClient = null;
 let _mqCache = LRU(256);
 let _advertCache = LRU(1024);
+
+let getMacPromise = function(prefix) {
+	if (!prefix) {
+		prefix = 'SETUP';
+	}
+    return new Promise(function(resolve, reject) {
+        console.log(chalk.dim('[' + prefix + ']'), 'getting own MAC address ...');
+
+        getmac.getMac(function(err, addr) {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            addr = normalizeAddr(addr);
+            resolve(addr);
+        });
+    });
+}
+
+yargs
+    .strict()
+    .option('host', {
+        alias: 'h',
+        describe: '// ZING ingest server hostname',
+        type: 'string'
+    })
+	.option('token', {
+        alias: 't',
+        describe: '// ZING ingest token',
+        type: 'string'
+    })
+    .wrap(null)
+    .command('info', '// information about this node', {}, function(argv) {
+        getMacPromise('INFO').then((addr) => {
+			console.log(chalk.dim('[INFO]'), '\t', chalk.bold(addr));
+            process.exit(0);
+        });
+    })
+	.command('start', '// start this relay node', {}, function(argv) {
+        getMacPromise().then((addr) => {
+            console.log('Relay Key:', addr);
+            process.exit(0);
+        });
+    })
+    .usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-spot') + ' <command>')
+    .demand(1, null)
+    .argv;
 
 function normalizeAddr(addr) {
     let a = addr.replace(/[^0-9A-Fa-f]/g, '');
@@ -72,41 +121,40 @@ function cacheAdd(addr, rssi, name) {
 }
 
 function cacheDrain() {
-    _mqCache.rforEach(function(value, key) {
-        let advEntry = _advertCache.peek(value.addr);
-        if (advEntry && advEntry.count > 1 && value.rssi_count >= 1) {
-            _mqCache.del(value.addr);
+    _mqCache
+        .rforEach(function(value, key) {
+            let advEntry = _advertCache.peek(value.addr);
+            if (advEntry && advEntry.count > 1 && value.rssi_count >= 1) {
+                _mqCache.del(value.addr);
 
-            let age = Math.round((new Date().getTime() - value.time) / 65.536);
-            let buffer = new Buffer(16);
-            buffer[0] = (age >> 8) & 0xFF;
-            buffer[1] = age & 0xFF;
-            addrToBuffer(_addr, buffer, 2);
-            addrToBuffer(value.addr, buffer, 8);
-            buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
-            buffer[15] = value.rssi_count;
+                let age = Math.round((new Date().getTime() - value.time) / 65.536);
+                let buffer = new Buffer(16);
+                buffer[0] = (age >> 8) & 0xFF;
+                buffer[1] = age & 0xFF;
+                addrToBuffer(_addr, buffer, 2);
+                addrToBuffer(value.addr, buffer, 8);
+                buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
+                buffer[15] = value.rssi_count;
 
-            console.log(chalk.dim('[MQTT] '), buffer);
+                console.log(chalk.dim('[MQTT] '), buffer);
 
-            _mqClient.publish('scan', buffer);
-            return;
-        }
-    });
+                _mqClient.publish('scan', buffer);
+                return;
+            }
+        });
 }
 
-// ----- print logo
-console.log(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n');
-
 // ----- NOBLE events
-noble.on('stateChange', function(state) {
-    console.log(chalk.dim('[NOBLE]'), 'state is', state);
-    if (state !== 'poweredOn') {
-        throw new Error('bluetooth powered off or not available')
-        return;
-    }
+noble
+    .on('stateChange', function(state) {
+        console.log(chalk.dim('[NOBLE]'), 'state is', state);
+        if (state !== 'poweredOn') {
+            throw new Error('bluetooth powered off or not available')
+            return;
+        }
 
-    setup();
-});
+        setup();
+    });
 
 noble.on('discover', function(peripheral) {
     let addr = normalizeAddr(peripheral.uuid);
@@ -115,20 +163,9 @@ noble.on('discover', function(peripheral) {
 
 // ----- setup the global variables
 function setup() {
-    Promise.resolve()
-        .then(() => new Promise(function(resolve, reject) {
-            console.log(chalk.dim('[SETUP]'), 'getting own MAC address ...');
-
-            getmac.getMac(function(err, addr) {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                addr = normalizeAddr(addr);
-                resolve(addr);
-            });
-        }))
+    Promise
+        .resolve()
+        .then(() => myAddr)
         .then(addr => {
             console.log(chalk.dim('[SETUP]'), '...', chalk.bold(addr));
             _addr = addr;
@@ -154,7 +191,9 @@ function setup() {
             });
         }))
         .then(client => {
-            console.log(chalk.dim('[SETUP]'), '...', chalk.bold(client.connected ? 'CONNECTED' : 'DISCONNECTED'));
+            console.log(chalk.dim('[SETUP]'), '...', chalk.bold(client.connected
+                ? 'CONNECTED'
+                : 'DISCONNECTED'));
             _mqClient = client;
         })
         .then(() => {

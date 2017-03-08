@@ -1,29 +1,33 @@
 {
-  "name": "zing-spot",
-  "version": "1.0.1",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "bin": {
-    "zing-spot": "./index.js"
-  },
-  "author": "Daniel Wang",
-  "license": "GPL-3.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/fmcode/zing-spot.git"
-  },
-  "dependencies": {
-    "chalk": "1.x",
-    "figlet": "1.x",
-    "getmac": "^1.2.1",
-    "lodash": "4.x",
-    "lru-cache": "^4.0.2",
-    "mqtt": "^2.4.0",
-    "noble": "1.x",
-    "sprintf-js": "^1.0.3",
-    "yargs": "^7.0.1"
-  }
+    "name": "zing-relay",
+    "version": "1.0.2",
+    "description": "ZING Relay Node for Raspberry Pi 3",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "bin": {
+        "zing-relay": "./index.js"
+    },
+    "author": "Daniel Wang",
+    "homepage": "https://github.com/zingdotfm/zing-relay",
+    "bugs": {
+        "url": "https://github.com/zingdotfm/zing-relay/issues"
+    },
+    "license": "GPL-3.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/zingdotfm/zing-relay.git"
+    },
+    "dependencies": {
+        "chalk": "1.x",
+        "figlet": "1.x",
+        "getmac": "^1.2.1",
+        "lodash": "4.x",
+        "lru-cache": "^4.0.2",
+        "mqtt": "^2.4.0",
+        "noble": "1.x",
+        "sprintf-js": "^1.0.3",
+        "yargs": "^7.0.1"
+    }
 }

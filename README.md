@@ -31,13 +31,13 @@ default password: `raspberry`
 		<pre>
 		pi@raspberrypi:~ $ <strong>sudo nano /etc/wpa_supplicant/wpa_supplicant.conf</strong>
 		</pre>
-	- Add your wifi credentials in the form of
-		```
+	- Add your wifi credentials to the end of the file, in the form of
+		<pre>
 		network={
-			ssid="<SSID>"
-			psk="<PSK>"
+			ssid="<strong>&lt;YOUR SSID&gt;</strong>"
+			psk="<strong>&lt;YOUR PSK&gt;</strong>"
 		}
-		```
+		</pre>
 	- Reboot  
 	  (... verify network connectivity)
 

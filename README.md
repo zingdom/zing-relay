@@ -42,13 +42,12 @@ default password: `raspberry`
 	  (... verify network connectivity)
 
 1. Update Installed Packages & Firmware
-	```bash
-	$ sudo apt update
-	$ sudo apt full-upgrade
-	$ sudo apt install -y rpi-update
-	$ sudo rpi-update
-	```
-
+	<pre>
+	pi@raspberrypi:~ $ <strong>sudo apt update</strong>
+	pi@raspberrypi:~ $ <strong>sudo apt full-upgrade</strong>
+	pi@raspberrypi:~ $ <strong>sudo apt install -y rpi-update</strong>
+	pi@raspberrypi:~ $ <strong>sudo rpi-update</strong>
+	</pre>
 	- Reboot  
 	(the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
 

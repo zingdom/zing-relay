@@ -45,14 +45,14 @@ default password: `raspberry`
 	  (... verify network connectivity)
 
 1. Update Installed Packages & Firmware
-```bash
-$ sudo apt update
-$ sudo apt full-upgrade
-$ sudo apt install -y rpi-update
-$ sudo rpi-update
-```
-	- Reboot  
-	  (the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
+	```bash
+	$ sudo apt update
+	$ sudo apt full-upgrade
+	$ sudo apt install -y rpi-update
+	$ sudo rpi-update
+	```
+	1. Reboot  
+	(the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
 
 1. Install bluez from source
 	- Install Dependencies  

@@ -7,9 +7,7 @@ The following instructions has been extensively tested on [Raspberry Pi 3 Model 
 1. Install [Raspbian Jessie Lite](https://www.raspberrypi.org/downloads/raspbian/)   
 (as of this writing, the latest available is kernel version 4.4)
 
-1. Boot
-
-1. Login   
+1. Boot & Login   
 default username: `pi`  
 default password: `raspberry`
 
@@ -33,7 +31,6 @@ default password: `raspberry`
 	```bash
 	$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 	```
-
 	1. Add wifi access point info in the form of
 	```
 	network={
@@ -51,19 +48,20 @@ default password: `raspberry`
 	$ sudo apt install -y rpi-update
 	$ sudo rpi-update
 	```
-	1. Reboot  
+	* Reboot  
 	(the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
 
 1. Install bluez from source
 	- Install Dependencies  
-			$ sudo apt install -y \
-				    libusb-dev \
-				    libdbus-1-dev \
-				    libglib2.0-dev \
-				    libudev-dev \
-				    libical-dev \
-				    libreadline-dev
-
+		```bash
+		$ sudo apt install -y \
+			    libusb-dev \
+			    libdbus-1-dev \
+			    libglib2.0-dev \
+			    libudev-dev \
+			    libical-dev \
+			    libreadline-dev
+		```
 	- Download the latest version of bluez (v5.44) from http://www.bluez.org/download/
 			$ wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz
 			$ tar xvf bluez-5.44.tar.xz

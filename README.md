@@ -71,14 +71,19 @@ default password: `raspberry`
 			$ ./configure
 			$ make
 			$ sudo make install
+
 	- Enable full Bluetooth LE support by
-	editing `bluetooth.service` and add `–experimental` flag to `bluetoothd`
-			$ sudo nano \
+	editing `bluetooth.service` and add `–experimental` flag to `bluetoothd` service
+		```bash
+		$ sudo nano \
 	    	/etc/systemd/system/bluetooth.target.wants/bluetooth.service
+		```
 	the edited line should look like:
+		```
 			...
 			ExecStart=/usr/local/libexec/bluetooth/bluetoothd --experimental
 			...
+		```
 reindex the systemd units and reboot
 
 

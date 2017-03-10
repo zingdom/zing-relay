@@ -100,7 +100,18 @@ default password: `raspberry`
 
 
 1. Install Node.js
-		$ curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
+	<pre>
+	pi@raspberrypi:~ $ <strong>curl -sL https://deb.nodesource.com/setup_7.x \
+			| sudo -E bash -</strong>
+	pi@raspberrypi:~ $ <strong>sudo apt install -y nodejs</strong>
+	</pre>
+
+	- verify node is installed
+		<pre>
+		pi@raspberrypi:~ $ <strong>node -v</strong>
+		</pre>
+	<pre>
+		$
 		$ sudo apt install -y nodejs
 		$ node -v
 		$ sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)

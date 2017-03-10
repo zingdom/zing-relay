@@ -15,15 +15,18 @@ default password: `raspberry`
 	<pre>
 	pi@raspberrypi:~ $ <strong>sudo raspi-config</strong>
 	</pre>
+
 	1. Update localization settings to your specific region, e.g. from `GB` to `US`
 		- locale
 		- keyboard
 		- wifi
 		- etc...
-	1. Reboot  
-	   (... verify locale settings)
+
+	1. Reboot then verify locale settings, e.g. if symbols on keyboard work as expected
+
 	1. Change default password for user `pi`  
 	   (make sure you do this after changing the keyboard locale)
+
 	1. Enabled SSH Server
 
 1. Setup Wifi  
@@ -31,6 +34,7 @@ default password: `raspberry`
 		<pre>
 		pi@raspberrypi:~ $ <strong>sudo nano /etc/wpa_supplicant/wpa_supplicant.conf</strong>
 		</pre>
+
 	- Add your wifi credentials to the end of the file, in the form of
 		<pre>
 		network={
@@ -38,8 +42,8 @@ default password: `raspberry`
 			psk="<strong>&lt;YOUR PSK&gt;</strong>"
 		}
 		</pre>
-	- Reboot  
-	  (... verify network connectivity)
+
+	- Reboot then verify network connectivity
 
 1. Update Installed Packages & Firmware
 	<pre>
@@ -48,11 +52,12 @@ default password: `raspberry`
 	pi@raspberrypi:~ $ <strong>sudo apt install -y rpi-update</strong>
 	pi@raspberrypi:~ $ <strong>sudo rpi-update</strong>
 	</pre>
+
 	- Reboot  
 	(the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
 
 1. Install bluez from source
-	- Install Dependencies
+	- Install dependencies first
 	<pre>
 	pi@raspberrypi:~ $ <strong>sudo apt install -y \
 			libusb-dev \
@@ -63,31 +68,35 @@ default password: `raspberry`
 			libreadline-dev</strong>
 	</pre>
 
-		```bash
-		$
-		```
 	- Download the latest version of bluez (v5.44) from http://www.bluez.org/download/
-
-			$ wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz
-			$ tar xvf bluez-5.44.tar.xz
-			$ cd bluez-5.44
-			$ ./configure
-			$ make
-			$ sudo make install
+	<pre>
+	pi@raspberrypi:~ $ <strong>wget <a href-"http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz">http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz</a></strong>
+	pi@raspberrypi:~ $ <strong>tar xvf bluez-5.44.tar.xz</strong>
+	pi@raspberrypi:~ $ <strong>cd bluez-5.44</strong>
+	pi@raspberrypi:~ $ <strong>./configure</strong>
+	pi@raspberrypi:~ $ <strong>make</strong>
+	pi@raspberrypi:~ $ <strong>sudo make install</strong>
+	</pre>
 
 	- Enable full Bluetooth LE support by
 	editing `bluetooth.service` and add `–experimental` flag to `bluetoothd` service
-		```bash
-		$ sudo nano \
-	    	/etc/systemd/system/bluetooth.target.wants/bluetooth.service
-		```
+		<pre>
+		pi@raspberrypi:~ $ <strong>sudo nano \
+	    	/etc/systemd/system/bluetooth.target.wants/bluetooth.service</strong>
+		</pre>
+
 	- the edited line should look like:
 		<pre>
 		...
 		ExecStart=/usr/local/libexec/bluetooth/bluetoothd <strong>--experimental</strong>
 		...
 		</pre>
-reindex the systemd units and reboot
+
+	- reindex the systemd units and reboot
+		<pre>
+		pi@raspberrypi:~ $ <strong>sudo systemctl daemon-reload</strong>
+		pi@raspberrypi:~ $ <strong>sudo reboot</strong>
+		</pre>
 
 
 1. Install Node.js

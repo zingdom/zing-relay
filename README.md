@@ -29,7 +29,7 @@ default password: `raspberry`
 1. Setup Wifi  
 	- Edit the [WPA supplicant](http://w1.fi/wpa_supplicant/) configuration file
 		<pre>
-		<strong>pi@raspberrypi:~ $</strong> sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+		pi@raspberrypi:~ $ <strong>sudo nano /etc/wpa_supplicant/wpa_supplicant.conf</strong>
 		</pre>
 	- Add your wifi credentials in the form of
 		```

@@ -78,7 +78,7 @@ default password: `raspberry`
 		$ sudo nano \
 	    	/etc/systemd/system/bluetooth.target.wants/bluetooth.service
 		```
-	the edited line should look like:
+	- the edited line should look like:
 		```
 			...
 			ExecStart=/usr/local/libexec/bluetooth/bluetoothd --experimental

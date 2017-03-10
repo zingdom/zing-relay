@@ -28,17 +28,17 @@ default password: `raspberry`
 
 1. Setup Wifi  
 	- Edit the [WPA supplicant](http://w1.fi/wpa_supplicant/) configuration file
-	```bash
-	$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
-	```
+		```bash
+		$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+		```
 	- Add your wifi credentials in the form of
-	```
-	network={
-		ssid="<SSID>"
-		psk="<PSK>"
-	}
-	```
-	1. Reboot  
+		```
+		network={
+			ssid="<SSID>"
+			psk="<PSK>"
+		}
+		```
+	- Reboot  
 	  (... verify network connectivity)
 
 1. Update Installed Packages & Firmware
@@ -48,7 +48,7 @@ default password: `raspberry`
 	$ sudo apt install -y rpi-update
 	$ sudo rpi-update
 	```
-	* Reboot  
+	- Reboot  
 	(the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
 
 1. Install bluez from source

@@ -1,7 +1,7 @@
 {
     "name": "zing-relay",
     "version": "1.0.2",
-    "description": "ZING Relay Node for Raspberry Pi 3",
+    "description": "ZING Relay Node for Raspberry Pi",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,24 +10,24 @@
         "zing-relay": "./index.js"
     },
     "author": "Daniel Wang",
-    "homepage": "https://github.com/zingdotfm/zing-relay",
+    "homepage": "https://www.zing.fm",
     "bugs": {
-        "url": "https://github.com/zingdotfm/zing-relay/issues"
+        "url": "https://github.com/zingdom/zing-relay/issues"
     },
     "license": "GPL-3.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/zingdotfm/zing-relay.git"
+        "url": "https://github.com/zingdom/zing-relay.git"
     },
     "dependencies": {
         "chalk": "1.x",
         "figlet": "1.x",
-        "getmac": "^1.2.1",
+        "getmac": "1.x",
         "lodash": "4.x",
-        "lru-cache": "^4.0.2",
-        "mqtt": "^2.4.0",
+        "lru-cache": "4.x",
+        "mqtt": "2.x",
         "noble": "1.x",
-        "sprintf-js": "^1.0.3",
-        "yargs": "^7.0.1"
+        "sprintf-js": "1.x",
+        "yargs": "1.x"
     }
 }

@@ -48,7 +48,7 @@ default password: `raspberry`
 	$ sudo apt install -y rpi-update
 	$ sudo rpi-update
 	```
-	
+
 	- Reboot  
 	(the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
 
@@ -56,14 +56,15 @@ default password: `raspberry`
 	- Install Dependencies  
 		```bash
 		$ sudo apt install -y \
-			    libusb-dev \
-			    libdbus-1-dev \
-			    libglib2.0-dev \
-			    libudev-dev \
-			    libical-dev \
-			    libreadline-dev
+			libusb-dev \
+			libdbus-1-dev \
+			libglib2.0-dev \
+			libudev-dev \
+			libical-dev \
+			libreadline-dev
 		```
 	- Download the latest version of bluez (v5.44) from http://www.bluez.org/download/
+
 			$ wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz
 			$ tar xvf bluez-5.44.tar.xz
 			$ cd bluez-5.44

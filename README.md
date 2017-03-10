@@ -55,12 +55,12 @@ default password: `raspberry`
 	- Install Dependencies
 	<pre>
 	pi@raspberrypi:~ $ <strong>sudo apt install -y \
-		libusb-dev \
-		libdbus-1-dev \
-		libglib2.0-dev \
-		libudev-dev \
-		libical-dev \
-		libreadline-dev</strong>
+			libusb-dev \
+			libdbus-1-dev \
+			libglib2.0-dev \
+			libudev-dev \
+			libical-dev \
+			libreadline-dev</strong>
 	</pre>
 
 		```bash

@@ -111,8 +111,9 @@ default password: `raspberry`
 		v7.7.2
 		pi@raspberrypi:~ $
 		</pre>
-	<pre>
-		$
-		$ sudo apt install -y nodejs
-		$ node -v
-		$ sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+
+	- by default, escalated privileges are required to start/stop bluetooth advertising.  to avoid having to run node as root or `sudo`, grant `cap_net_raw` privileges to the `node` binary:
+		<pre>
+		pi@raspberrypi:~ $ <strong>sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)</strong>
+		<pre>
+	

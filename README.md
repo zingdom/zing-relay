@@ -82,9 +82,10 @@ default password: `raspberry`
 	    	/etc/systemd/system/bluetooth.target.wants/bluetooth.service
 		```
 	- the edited line should look like:
+
 		```
 			...
-			ExecStart=/usr/local/libexec/bluetooth/bluetoothd --experimental
+			ExecStart=/usr/local/libexec/bluetooth/bluetoothd <strong>--experimental</strong>
 			...
 		```
 reindex the systemd units and reboot

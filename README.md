@@ -15,6 +15,7 @@ default password: `raspberry`
 
 1. Basic Setup
 		$ sudo raspi-config
+
 	1. Update localization settings to your specific region, e.g. from `GB` to `US`
 		- locale
 		- keyboard

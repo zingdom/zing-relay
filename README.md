@@ -13,29 +13,29 @@ The following instructions has been extensively tested on [Raspberry Pi 3 Model 
 default username: `pi`  
 default password: `raspberry`
 
-1. Basic Setup  
+1. Basic Setup
 		$ sudo raspi-config
-	- Update localization settings to your specific region, e.g. from `GB` to `US`
+	1. Update localization settings to your specific region, e.g. from `GB` to `US`
 		- locale
 		- keyboard
 		- wifi
 		- etc...
-	- Reboot  
-	  (... verify locale settings)
-	- Change default password for user `pi`  
-	  (make sure you do this after changing the keyboard locale)
-	- Enabled SSH Server
+	1. Reboot  
+	   (... verify locale settings)
+	1. Change default password for user `pi`  
+	   (make sure you do this after changing the keyboard locale)
+	1. Enabled SSH Server
 
 1. Setup Wifi  
 	- Edit the [WPA supplicant](http://w1.fi/wpa_supplicant/) configuration file
 			$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 
 	- Add wifi access point info in the form of
-			network={
-				ssid="<SSID>"
-				psk="<PSK>"
-	  		}
-	- Reboot  
+				network={
+					ssid="<SSID>"
+					psk="<PSK>"
+	  			}
+	- Reboot
 	  (... verify network connectivity)
 
 1. Update Installed Packages & Firmware

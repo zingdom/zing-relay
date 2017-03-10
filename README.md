@@ -12,9 +12,9 @@ default username: `pi`
 default password: `raspberry`
 
 1. Perform Basic Setup
-	```bash
-	$ sudo raspi-config
-	```
+	<pre>
+	pi@raspberrypi:~ $ <strong>sudo raspi-config</strong>
+	</pre>
 	1. Update localization settings to your specific region, e.g. from `GB` to `US`
 		- locale
 		- keyboard

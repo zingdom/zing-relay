@@ -27,11 +27,11 @@ default password: `raspberry`
 	1. Enabled SSH Server
 
 1. Setup Wifi  
-	1. Edit the [WPA supplicant](http://w1.fi/wpa_supplicant/) configuration file
+	- Edit the [WPA supplicant](http://w1.fi/wpa_supplicant/) configuration file
 	```bash
 	$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 	```
-	1. Add wifi access point info in the form of
+	- Add your wifi credentials in the form of
 	```
 	network={
 		ssid="<SSID>"

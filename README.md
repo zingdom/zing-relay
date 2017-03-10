@@ -112,7 +112,12 @@ default password: `raspberry`
 	pi@raspberrypi:~ $
 	</pre>
 
-	- by default, escalated privileges are required to start/stop bluetooth advertising.  to avoid having to run node as root or `sudo`, grant `cap_net_raw` privileges to the `node` binary:
+	- by default, escalated privileges are required to start/stop bluetooth advertising; to avoid having to run node programs as root or `sudo` each time, grant `cap_net_raw` privileges to the `node` binary:
 	<pre>
 	pi@raspberrypi:~ $ <strong>sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)</strong>
+	</pre>
+
+1. Install `zing-relay`
+	<pre>
+	pi@raspberrypi:~ $ <strong>sudo npm install -g zing-relay</strong>
 	</pre>

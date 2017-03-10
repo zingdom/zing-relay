@@ -55,7 +55,8 @@ default password: `raspberry`
 	(the Pi may hang at this point -- black screen with flashing green ACTI led, simply power cycle if that happens)
 
 1. Install bluez from source
-	- Install Dependencies	
+	- Install Dependencies
+
 		```bash
 		$ sudo apt install -y \
 			libusb-dev \

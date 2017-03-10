@@ -83,11 +83,11 @@ default password: `raspberry`
 		```
 	- the edited line should look like:
 
-		```
+		<pre>
 			...
 			ExecStart=/usr/local/libexec/bluetooth/bluetoothd <strong>--experimental</strong>
 			...
-		```
+		</pre>
 reindex the systemd units and reboot
 
 

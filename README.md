@@ -13,7 +13,7 @@ The following instructions has been extensively tested on [Raspberry Pi 3 Model 
 default username: `pi`  
 default password: `raspberry`
 
-1. Basic Setup
+1. Perform Basic Setup
 	```bash
 	$ sudo raspi-config
 	```
@@ -29,15 +29,19 @@ default password: `raspberry`
 	1. Enabled SSH Server
 
 1. Setup Wifi  
-	- Edit the [WPA supplicant](http://w1.fi/wpa_supplicant/) configuration file
-			$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+	1. Edit the [WPA supplicant](http://w1.fi/wpa_supplicant/) configuration file
+	```bash
+	$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+	```
 
-	- Add wifi access point info in the form of
-				network={
-					ssid="<SSID>"
-					psk="<PSK>"
-	  			}
-	- Reboot
+	1. Add wifi access point info in the form of
+	```
+	network={
+		ssid="<SSID>"
+		psk="<PSK>"
+	}
+	```
+	1. Reboot  
 	  (... verify network connectivity)
 
 1. Update Installed Packages & Firmware

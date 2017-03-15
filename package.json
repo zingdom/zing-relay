@@ -20,7 +20,11 @@
     "url": "https://github.com/zingdom/zing-relay.git"
   },
   "dependencies": {
+    "bluebird": "^3.5.0",
     "chalk": "1.x",
+    "cli-spinner": "^0.2.6",
+    "cli-table": "^0.3.1",
+    "event-emitter-es6": "^1.1.5",
     "figlet": "1.x",
     "getmac": "1.x",
     "jsonwebtoken": "^7.3.0",
@@ -28,6 +32,7 @@
     "lru-cache": "4.x",
     "mqtt": "2.x",
     "noble": "1.x",
+    "ora": "^1.1.0",
     "sprintf-js": "1.x",
     "yargs": "7.x"
   }

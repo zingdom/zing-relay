@@ -19,7 +19,7 @@ let _addrK = 'aaaa:bb:cccccc';
 let _mqClient = null;
 let _mqCache = LRU(256);
 let _advertCache = LRU(1024);
-let _kalman = new KalmanFilter(0.01, 1);
+let _kalman = new KalmanFilter(0.01, 5, 1);
 
 noble
     .on('stateChange', function(state) {

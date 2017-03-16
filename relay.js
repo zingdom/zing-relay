@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const LRU = require('lru-cache');
 const mqtt = require('mqtt');
 const noble = require('noble');
-const ora = require('ora');
+const ora2 = require('./spinner');
 const sprintf = require('sprintf-js').sprintf;
 
 const KalmanFilter = require('./kalman');
@@ -26,16 +26,10 @@ function normalizeAddr(addr) {
     return a.substring(0, 4) + ':' + a.substring(4, 6) + ':' + a.substring(6, 12);
 }
 
-function toStatusString(name, value) {
-    let spaces = '                    ';
-    return chalk.dim(name + ':') + spaces.substring(0, 6 - name.length) + chalk.bold(value);
-}
-
 class Relay extends EventEmitter {
     constructor() {
         super();
 
-        this.ble_ready = null;
         this.myAddr = null;
         this.mqConnOptions = null;
         this.mqClient = null;
@@ -43,51 +37,47 @@ class Relay extends EventEmitter {
         this.mqCache = LRU(256);
         this.advertCache = LRU(1024);
         this.kalman = new KalmanFilter(0.01, 5, 1);
-
-        this.init();
-    }
-
-    init() {
-        this._setupNoble =
-            () => new Promise((resolve, reject) => {
-                let spinner = ora('initializing BLE...').start();
-
-                let func = (ble_ready) => {
-                    if (ble_ready) {
-                        spinner.succeed('BLE is ready');
-                        resolve(ble_ready);
-                    } else {
-                        let err = new Error('BLE is powered off or not available');
-                        spinner.fail(err);
-                        reject(err);
-                    }
-                };
-
-                if (this.ble_ready !== null) {
-                    func(this.ble_ready);
-                } else
-                    console.log('starting handler', func);
-                    this.on('ble_ready', func);
-            });
-    }
-
-    noble_onStateChange(state) {
-        this.ble_ready = state === 'poweredOn';
-        this.emit('ble_ready', this.ble_ready);
-    }
-
-    noble_onDiscover(peripheral) {
-        // let addr = normalizeAddr(peripheral.uuid);
-        // cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
     }
 
     isValid() {
         return this.myAddr != null && this.mqConnOptions != null;
     }
 
+    noble_onDiscover(peripheral) {
+        let addr = normalizeAddr(peripheral.uuid);
+        console.log(addr);
+        // cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
+    }
+
+    _promiseSetupNoble()
+    {
+        return new Promise((resolve, reject) => {
+            let spinner = ora2('initializing BLE...').start();
+
+            let counter = 0;
+            let handle = setInterval(function() {
+                if (counter++ > 10) {
+                    let err = new Error('BLE is powered off or not available, (state="' + noble.state + '")');
+                    spinner.fail(err);
+                    clearInterval(handle);
+                    reject(err);
+                    return;
+                }
+
+                if (noble.state === 'poweredOn') {
+                    noble.on('discover', this.noble_onDiscover.bind(this));
+
+                    spinner.succeed2('BLE', 'READY');
+                    clearInterval(handle);
+                    resolve(noble.state);
+                }
+            }, 500);
+        });
+    }
+
     _promiseGetMac() {
         return new Promise((resolve, reject) => {
-            let spinner = ora('getting address...').start();
+            let spinner = ora2('getting address...').start();
 
             getmac.getMac((err, addr) => {
                 if (err) {
@@ -97,7 +87,7 @@ class Relay extends EventEmitter {
                 }
                 addr = normalizeAddr(addr);
 
-                spinner.succeed(toStatusString('Relay', addr));
+                spinner.succeed2('Relay', addr);
                 resolve(addr);
             });
         });
@@ -105,9 +95,11 @@ class Relay extends EventEmitter {
 
     _promiseVerifyToken(path) {
         return new Promise((resolve, reject) => {
-            let spinner = ora('verifying token...').start();
+            let spinner = ora2('verifying token...').start();
             fs.readFile(path, 'utf8', (err, data) => {
-                let token = err ? path : data;
+                let token = err
+                    ? path
+                    : data;
 
                 jwt.verify(token.trim(), zing_pub_key, (err, encoded) => {
                     if (err) {
@@ -116,7 +108,7 @@ class Relay extends EventEmitter {
                         return;
                     }
 
-                    spinner.succeed(toStatusString('Site', encoded.sub));
+                    spinner.succeed2('Site', encoded.sub);
                     resolve(encoded);
                 });
             });
@@ -125,13 +117,13 @@ class Relay extends EventEmitter {
 
     _promiseSetupMqttClient(encoded) {
         return new Promise((resolve, reject) => {
-            let spinner = ora('connecting...').start();
+            let spinner = ora2('connecting...').start();
 
             let mqUrl = sprintf('mqtt:%s:%s@%s', encoded.username, encoded.password, encoded.host);
             let client = mqtt.connect(mqUrl);
 
             client.on('connect', function() {
-                spinner.succeed(toStatusString('MQTT', 'CONNECTED'));
+                spinner.succeed2('MQTT', 'CONNECTED');
                 resolve(client);
             });
 
@@ -158,8 +150,8 @@ class Relay extends EventEmitter {
     }
 
     run(token) {
-        return Promise.resolve()
-            .then(this._setupNoble)
+        return Promise
+            .resolve()
             .then(this._promiseGetMac)
             .then(addr => {
                 this.myAddr = addr;
@@ -173,6 +165,10 @@ class Relay extends EventEmitter {
             .then(this._promiseSetupMqttClient)
             .then(client => {
                 this.mqClient = client;
+            })
+            .then(this._promiseSetupNoble)
+            .then(state => {
+                noble.startScanning([], true);
             });
     }
 
@@ -231,9 +227,9 @@ class Relay extends EventEmitter {
                     buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
                     buffer[15] = value.rssi_count;
 
-                    console.log(chalk.dim('[MQTT ]'), buffer, value.name ?
-                        value.name :
-                        '');
+                    console.log(chalk.dim('[MQTT ]'), buffer, value.name
+                        ? value.name
+                        : '');
 
                     _mqClient.publish('scan', buffer);
                     return;

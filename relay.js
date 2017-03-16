@@ -35,6 +35,7 @@ class Relay extends EventEmitter {
     constructor() {
         super();
 
+        this.ble_ready = null;
         this.myAddr = null;
         this.mqConnOptions = null;
         this.mqClient = null;
@@ -42,28 +43,46 @@ class Relay extends EventEmitter {
         this.mqCache = LRU(256);
         this.advertCache = LRU(1024);
         this.kalman = new KalmanFilter(0.01, 5, 1);
+
+        this.init();
+    }
+
+    init() {
+        this._setupNoble =
+            () => new Promise((resolve, reject) => {
+                let spinner = ora('initializing BLE...').start();
+
+                let func = (ble_ready) => {
+                    if (ble_ready) {
+                        spinner.succeed('BLE is ready');
+                        resolve(ble_ready);
+                    } else {
+                        let err = new Error('BLE is powered off or not available');
+                        spinner.fail(err);
+                        reject(err);
+                    }
+                };
+
+                if (this.ble_ready !== null) {
+                    func(this.ble_ready);
+                } else
+                    console.log('starting handler', func);
+                    this.on('ble_ready', func);
+            });
+    }
+
+    noble_onStateChange(state) {
+        this.ble_ready = state === 'poweredOn';
+        this.emit('ble_ready', this.ble_ready);
+    }
+
+    noble_onDiscover(peripheral) {
+        // let addr = normalizeAddr(peripheral.uuid);
+        // cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
     }
 
     isValid() {
         return this.myAddr != null && this.mqConnOptions != null;
-    }
-
-    _promiseSetupNoble() {
-        return new Promise((resolve, reject) => {
-            noble //
-                .on('stateChange', function(state) {
-                    resolve(noble);
-                    return;
-
-                    if (state !== 'poweredOn') {
-                        reject(new Error('bluetooth powered off or not available'));
-                    }
-                })
-                .on('discover', function(peripheral) {
-                    let addr = normalizeAddr(peripheral.uuid);
-                    cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
-                });
-        });
     }
 
     _promiseGetMac() {
@@ -82,10 +101,6 @@ class Relay extends EventEmitter {
                 resolve(addr);
             });
         });
-    }
-
-    info() {
-        return this._promiseGetMac();
     }
 
     _promiseVerifyToken(path) {
@@ -138,10 +153,13 @@ class Relay extends EventEmitter {
         });
     }
 
-    _setupMqttClient() {}
+    info() {
+        return this._promiseGetMac();
+    }
 
     run(token) {
         return Promise.resolve()
+            .then(this._setupNoble)
             .then(this._promiseGetMac)
             .then(addr => {
                 this.myAddr = addr;
@@ -155,8 +173,7 @@ class Relay extends EventEmitter {
             .then(this._promiseSetupMqttClient)
             .then(client => {
                 this.mqClient = client;
-            })
-            .then(this._promiseSetupNoble);
+            });
     }
 
     cacheAdd(addr, rssi, name) {

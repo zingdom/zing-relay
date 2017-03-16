@@ -14,6 +14,11 @@ const Table = require('cli-table');
 
 let relay = new Relay();
 
+// noble event handlers must be configured immediately (why?)
+noble
+    .on('stateChange', relay.noble_onStateChange)
+    .on('discover', relay.noble_onDiscover);
+
 require('yargs')
     .strict()
     .command('info', '// information about this relay', {}, function(argv) {
@@ -40,7 +45,7 @@ require('yargs')
                 process.exit();
             })
             .catch(err => {
-				console.error(err);
+                console.error(err);
                 process.exit(-1);
             });
 
@@ -70,5 +75,4 @@ require('yargs')
 
 // ----- global variables
 
-function setup() {
-}
+function setup() {}

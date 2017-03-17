@@ -1,8 +1,6 @@
 "use strict";
 
 const chalk = require('chalk');
-const EventEmitter = require('event-emitter-es6');
-const figlet = require('figlet');
 const fs = require('fs');
 const getmac = require('getmac');
 const jwt = require('jsonwebtoken');
@@ -13,238 +11,228 @@ const ora2 = require('./spinner');
 const sprintf = require('sprintf-js').sprintf;
 
 const KalmanFilter = require('./kalman');
-const package_json = require('./package.json');
 const zing_pub_key = require('./zing_pub_key');
 
 function normalizeAddr(addr) {
-    let a = addr.replace(/[^0-9A-Fa-f]/g, '');
-    if (a.length != 12) {
-        throw new Error('invalid address: ' + addr + ' (' + a + ')');
-    }
+	let a = addr.replace(/[^0-9A-Fa-f]/g, '');
+	if (a.length != 12) {
+		throw new Error('invalid address: ' + addr + ' (' + a + ')');
+	}
 
-    a = a.toLowerCase();
-    return a.substring(0, 4) + ':' + a.substring(4, 6) + ':' + a.substring(6, 12);
+	a = a.toLowerCase();
+	return a.substring(0, 4) + ':' + a.substring(4, 6) + ':' + a.substring(6, 12);
 }
 
-class Relay extends EventEmitter {
-    constructor() {
-        super();
+function addrToBuffer(addr, buffer, index) {
+	buffer[index] = parseInt(addr.substring(0, 2), 16);
+	buffer[index + 1] = parseInt(addr.substring(2, 4), 16);
+	buffer[index + 2] = parseInt(addr.substring(5, 7), 16);
+	buffer[index + 3] = parseInt(addr.substring(8, 10), 16);
+	buffer[index + 4] = parseInt(addr.substring(10, 12), 16);
+	buffer[index + 5] = parseInt(addr.substring(12, 14), 16);
+}
 
-        this.myAddr = null;
-        this.mqConnOptions = null;
-        this.mqClient = null;
+class Relay {
+	constructor() {
+		this.myAddr = null;
+		this.mqConnOptions = null;
+		this.mqClient = null;
 
-        this.mqCache = LRU(256);
-        this.advertCache = LRU(1024);
-        this.kalman = new KalmanFilter(0.01, 5, 1);
-    }
+		this.mqCache = LRU(256);
+		this.advertCache = LRU(1024);
+		this.kalman = new KalmanFilter(0.01, 5, 1);
+	}
 
-    isValid() {
-        return this.myAddr != null && this.mqConnOptions != null;
-    }
+	isValid() {
+		return this.myAddr != null && this.mqConnOptions != null;
+	}
 
-    noble_onDiscover(peripheral) {
-        let addr = normalizeAddr(peripheral.uuid);
-        console.log(addr);
-        // cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
-    }
+	_promiseSetupNoble() {
+		return new Promise((resolve, reject) => {
+			let spinner = ora2('initializing BLE...').start();
 
-    _promiseSetupNoble()
-    {
-        return new Promise((resolve, reject) => {
-            let spinner = ora2('initializing BLE...').start();
+			let counter = 0;
+			let handle = setInterval(function () {
+				if (counter++ >= 10) {
+					let err = new Error('Bluetooth is powered off or not available, (state="' + noble.state + '")');
+					spinner.finish('BLE', err);
+					clearInterval(handle);
+					reject(err);
+					return;
+				}
 
-            let counter = 0;
-            let handle = setInterval(function() {
-                if (counter++ > 10) {
-                    let err = new Error('BLE is powered off or not available, (state="' + noble.state + '")');
-                    spinner.fail(err);
-                    clearInterval(handle);
-                    reject(err);
-                    return;
-                }
+				if (noble.state === 'poweredOn') {
+					spinner.finish('BLE', 'READY');
+					clearInterval(handle);
+					resolve(noble.state);
+				}
+			}, 500);
+		});
+	}
 
-                if (noble.state === 'poweredOn') {
-                    noble.on('discover', this.noble_onDiscover.bind(this));
+	_promiseGetMac() {
+		return new Promise((resolve, reject) => {
+			let spinner = ora2('getting address...').start();
 
-                    spinner.succeed2('BLE', 'READY');
-                    clearInterval(handle);
-                    resolve(noble.state);
-                }
-            }, 500);
-        });
-    }
+			getmac.getMac((err, addr) => {
+				if (err) {
+					spinner.finish('Relay', err);
+					reject(err);
+					return;
+				}
+				addr = normalizeAddr(addr);
 
-    _promiseGetMac() {
-        return new Promise((resolve, reject) => {
-            let spinner = ora2('getting address...').start();
+				spinner.finish('Relay', addr);
+				resolve(addr);
+			});
+		});
+	}
 
-            getmac.getMac((err, addr) => {
-                if (err) {
-                    spinner.fail(err);
-                    reject(err);
-                    return;
-                }
-                addr = normalizeAddr(addr);
+	_promiseVerifyToken(path) {
+		return new Promise((resolve, reject) => {
+			let spinner = ora2('verifying token...').start();
+			fs.readFile(path, 'utf8', (err, data) => {
+				let token = err ?
+					path :
+					data;
 
-                spinner.succeed2('Relay', addr);
-                resolve(addr);
-            });
-        });
-    }
+				jwt.verify(token.trim(), zing_pub_key, (err, encoded) => {
+					if (err) {
+						spinner.finish('Token', err);
+						reject(err);
+						return;
+					}
 
-    _promiseVerifyToken(path) {
-        return new Promise((resolve, reject) => {
-            let spinner = ora2('verifying token...').start();
-            fs.readFile(path, 'utf8', (err, data) => {
-                let token = err
-                    ? path
-                    : data;
+					spinner.finish('Token', 'VERIFIED, site=\'' + encoded.sub + '\'');
+					resolve(encoded);
+				});
+			});
+		});
+	}
 
-                jwt.verify(token.trim(), zing_pub_key, (err, encoded) => {
-                    if (err) {
-                        spinner.fail(err);
-                        reject(err);
-                        return;
-                    }
+	_promiseSetupMqttClient(encoded) {
+		return new Promise((resolve, reject) => {
+			let spinner = ora2('connecting...').start();
 
-                    spinner.succeed2('Site', encoded.sub);
-                    resolve(encoded);
-                });
-            });
-        });
-    }
+			let mqUrl = sprintf('mqtt:%s:%s@%s', encoded.username, encoded.password, encoded.host);
+			let client = mqtt.connect(mqUrl);
 
-    _promiseSetupMqttClient(encoded) {
-        return new Promise((resolve, reject) => {
-            let spinner = ora2('connecting...').start();
+			client.on('connect', function () {
+				spinner.finish('MQTT', 'CONNECTED');
+				resolve(client);
+			});
 
-            let mqUrl = sprintf('mqtt:%s:%s@%s', encoded.username, encoded.password, encoded.host);
-            let client = mqtt.connect(mqUrl);
+			client.on('error', function (err) {
+				spinner.finish('MQTT', err);
+				reject(err);
+			});
 
-            client.on('connect', function() {
-                spinner.succeed2('MQTT', 'CONNECTED');
-                resolve(client);
-            });
+			client.on('reconnect', function () {
+				console.error('MQTT reconnecting...');
+			});
 
-            client.on('error', function(err) {
-                console.log('error');
-                spinner.fail(err);
-                reject(err);
-            });
+			client.on('close', function () {
+				console.error('MQTT closed...');
+				process.exit(-1);
+			});
+		});
+	}
 
-            client.on('reconnect', function() {
-                console.log('reconnect');
-                // spinner = ora('connecting...').start();
-            });
+	info() {
+		return this._promiseGetMac();
+	}
 
-            client.on('close', function() {
-                spinner.fail('failed!');
-                reject(err);
-            });
-        });
-    }
+	run(token) {
+		return Promise
+			.resolve()
+			.then(this._promiseGetMac)
+			.then(addr => {
+				this.myAddr = addr;
+				return token;
+			})
+			.then(this._promiseVerifyToken)
+			.then(encoded => {
+				this.mqConnOptions = encoded;
+				return encoded;
+			})
+			.then(this._promiseSetupMqttClient)
+			.then(client => {
+				this.mqClient = client;
+			})
+			.then(this._promiseSetupNoble)
+			.then(state => {
+				noble.on('discover', this.noble_onDiscover.bind(this));
+				noble.startScanning([], true);
 
-    info() {
-        return this._promiseGetMac();
-    }
+				setInterval(this.cacheDrain.bind(this), 100);
+			});
+	}
 
-    run(token) {
-        return Promise
-            .resolve()
-            .then(this._promiseGetMac)
-            .then(addr => {
-                this.myAddr = addr;
-                return token;
-            })
-            .then(this._promiseVerifyToken)
-            .then(encoded => {
-                this.mqConnOptions = encoded;
-                return encoded;
-            })
-            .then(this._promiseSetupMqttClient)
-            .then(client => {
-                this.mqClient = client;
-            })
-            .then(this._promiseSetupNoble)
-            .then(state => {
-                noble.startScanning([], true);
-            });
-    }
+	noble_onDiscover(peripheral) {
+		let addr = normalizeAddr(peripheral.uuid);
+		this.cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
+	}
 
-    cacheAdd(addr, rssi, name) {
-        let advEntry = _advertCache.get(addr);
-        if (!advEntry) {
-            advEntry = {
-                count: 0
-            };
-            _advertCache.set(addr, advEntry);
-        }
-        advEntry.count++;
+	cacheAdd(addr, rssi, name) {
+		let advertEntry = this.advertCache.get(addr);
+		if (typeof advertEntry === 'undefined') {
+			advertEntry = {
+				count: 0
+			};
+			this.advertCache.set(addr, advertEntry);
+		}
+		advertEntry.count++;
 
-        let mqEntry = _mqCache.get(addr);
-        if (!mqEntry) {
-            mqEntry = {
-                'addr': addr,
-                'rssi_total': 0,
-                'rssi_count': 0
-            };
-            _mqCache.set(addr, mqEntry);
-        }
+		let mqEntry = this.mqCache.get(addr);
+		if (typeof mqEntry === 'undefined') {
+			mqEntry = {
+				'addr': addr,
+				'rssi_total': 0,
+				'rssi_count': 0
+			};
+			this.mqCache.set(addr, mqEntry);
+		}
 
-        // timestamp
-        mqEntry.time = new Date().getTime();
+		// timestamp
+		mqEntry.time = new Date().getTime();
 
-        // rssi
-        if (rssi < 0) { // ignore invalid RSSI (rssi >= 0)
-            if (addr === '00ea:24:2efea4') {
-                rssi = _kalman.filter(rssi);
-            }
+		// rssi
+		if (rssi < 0) { // ignore invalid RSSI (rssi >= 0)
+			mqEntry.rssi_total += rssi;
+			mqEntry.rssi_count += 1;
+		}
 
-            mqEntry.rssi_total += rssi;
-            mqEntry.rssi_count += 1;
-        }
+		// device name
+		if (name) {
+			mqEntry.name = name;
+		}
+	}
 
-        // device name
-        if (name) {
-            mqEntry.name = name;
-        }
-    }
+	cacheDrain() {
+		this.mqCache
+			.rforEach((value, key) => {
+				let advertEntry = this.advertCache.peek(value.addr);
+				if (advertEntry && advertEntry.count > 1 && value.rssi_count >= 1) {
+					this.mqCache.del(value.addr);
 
-    cacheDrain() {
-        _mqCache
-            .rforEach(function(value, key) {
-                let advEntry = _advertCache.peek(value.addr);
-                if (advEntry && advEntry.count > 1 && value.rssi_count >= 1) {
-                    _mqCache.del(value.addr);
+					let age = Math.round((new Date().getTime() - value.time) / 65.536);
+					let buffer = new Buffer(16);
+					buffer[0] = (age >> 8) & 0xFF;
+					buffer[1] = age & 0xFF;
+					addrToBuffer(this.myAddr, buffer, 2);
+					addrToBuffer(value.addr, buffer, 8);
+					buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
+					buffer[15] = value.rssi_count;
 
-                    let age = Math.round((new Date().getTime() - value.time) / 65.536);
-                    let buffer = new Buffer(16);
-                    buffer[0] = (age >> 8) & 0xFF;
-                    buffer[1] = age & 0xFF;
-                    addrToBuffer(_addr, buffer, 2);
-                    addrToBuffer(value.addr, buffer, 8);
-                    buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
-                    buffer[15] = value.rssi_count;
+					console.log(chalk.dim('[MQTT]'),
+						buffer,
+						value.name ? value.name : '');
 
-                    console.log(chalk.dim('[MQTT ]'), buffer, value.name
-                        ? value.name
-                        : '');
-
-                    _mqClient.publish('scan', buffer);
-                    return;
-                }
-            });
-    }
-
-    addrToBuffer(addr, buffer, index) {
-        buffer[index] = parseInt(addr.substring(0, 2), 16);
-        buffer[index + 1] = parseInt(addr.substring(2, 4), 16);
-        buffer[index + 2] = parseInt(addr.substring(5, 7), 16);
-        buffer[index + 3] = parseInt(addr.substring(8, 10), 16);
-        buffer[index + 4] = parseInt(addr.substring(10, 12), 16);
-        buffer[index + 5] = parseInt(addr.substring(12, 14), 16);
-    }
+					this.mqClient.publish('scan', buffer);
+					return;
+				}
+			});
+	}
 }
 
 module.exports = Relay;

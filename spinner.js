@@ -6,14 +6,19 @@ const Ora = require('ora');
 module.exports = function(opts) {
     let o = new Ora(opts);
 
-    o.succeed2 = function(text1, text2) {
-        if (!text2) {
-            this.succeed(text1);
+    o.finish = function(name, value) {
+        if (!value) {
+            this.succeed(name);
             return;
         }
 
         let spaces = '                              '; // 30 spaces
-        this.succeed(chalk.dim(text1 + ':') + spaces.substring(0, 6 - text1.length) + chalk.bold(text2));
+        let msg = chalk.dim(name + ':') + spaces.substring(0, 6 - name.length) + chalk.bold(value);
+        if (value instanceof Error) {
+            this.fail(msg);
+        } else {
+            this.succeed(msg);
+        }
     };
 
     return o;

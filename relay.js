@@ -14,12 +14,10 @@ const KalmanFilter = require('./kalman');
 const zing_pub_key = require('./zing_pub_key');
 
 function normalizeAddr(addr) {
-	let a = addr.replace(/[^0-9A-Fa-f]/g, '');
+	let a = addr.replace(/[^0-9A-Fa-f]/g, '').toLowerCase();
 	if (a.length != 12) {
 		throw new Error('invalid address: ' + addr + ' (' + a + ')');
 	}
-
-	a = a.toLowerCase();
 	return a.substring(0, 4) + ':' + a.substring(4, 6) + ':' + a.substring(6, 12);
 }
 

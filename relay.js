@@ -7,8 +7,9 @@ const jwt = require('jsonwebtoken');
 const LRU = require('lru-cache');
 const mqtt = require('mqtt');
 const noble = require('noble');
-const ora2 = require('./spinner');
 const sprintf = require('sprintf-js').sprintf;
+const url = require('url');
+const utils = require('./utils');
 
 const KalmanFilter = require('./kalman');
 const zing_pub_key = require('./zing_pub_key');
@@ -32,8 +33,8 @@ function addrToBuffer(addr, buffer, index) {
 
 class Relay {
 	constructor() {
+		this.site = null;
 		this.myAddr = null;
-		this.mqConnOptions = null;
 		this.mqClient = null;
 
 		this.mqCache = LRU(256);
@@ -86,34 +87,11 @@ class Relay {
 		});
 	}
 
-	_promiseVerifyToken(path) {
-		return new Promise((resolve, reject) => {
-			let spinner = ora2('verifying token...').start();
-			fs.readFile(path, 'utf8', (err, data) => {
-				let token = err ?
-					path :
-					data;
-
-				jwt.verify(token.trim(), zing_pub_key, (err, encoded) => {
-					if (err) {
-						spinner.finish('Token', err);
-						reject(err);
-						return;
-					}
-
-					spinner.finish('Token', 'VERIFIED, site=\'' + encoded.sub + '\'');
-					resolve(encoded);
-				});
-			});
-		});
-	}
-
-	_promiseSetupMqttClient(encoded) {
+	_promiseSetupMqttClient(mqttUri) {
 		return new Promise((resolve, reject) => {
 			let spinner = ora2('connecting...').start();
 
-			let mqUrl = sprintf('mqtt:%s:%s@%s', encoded.username, encoded.password, encoded.host);
-			let client = mqtt.connect(mqUrl);
+			let client = mqtt.connect(mqttUri);
 
 			client.on('connect', function () {
 				spinner.finish('MQTT', 'CONNECTED');
@@ -140,18 +118,23 @@ class Relay {
 		return this._promiseGetMac();
 	}
 
-	run(token) {
+	run(mqttUri) {
 		return Promise
 			.resolve()
 			.then(this._promiseGetMac)
 			.then(addr => {
 				this.myAddr = addr;
-				return token;
-			})
-			.then(this._promiseVerifyToken)
-			.then(encoded => {
-				this.mqConnOptions = encoded;
-				return encoded;
+				
+				let auth = url.parse(mqttUri).auth;
+				if(typeof auth === 'undefined')
+				{
+					throw new Error('badly formatted MQTT URI');
+				}
+
+				this.site = auth.substring(0, auth.indexOf('-'));
+				console.log('site', this.site);
+
+				return mqttUri;
 			})
 			.then(this._promiseSetupMqttClient)
 			.then(client => {
@@ -226,7 +209,8 @@ class Relay {
 						buffer,
 						value.name ? value.name : '');
 
-					this.mqClient.publish('scan', buffer);
+					let topic = sprintf('site/%s/%s', this.mqConnOptions.sub, this.myAddr);
+					this.mqClient.publish(topic, buffer);
 					return;
 				}
 			});

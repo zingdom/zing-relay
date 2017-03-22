@@ -1,0 +1,29 @@
+{
+  "name": "numeral",
+  "repo": "adamwdraper/Numeral-js",
+  "version": "2.0.4",
+  "description": "Format and manipulate numbers.",
+  "keywords": [
+    "numeral",
+    "number",
+    "format",
+    "time",
+    "money",
+    "percentage"
+  ],
+  "scripts": [
+    "numeral.js"
+  ],
+  "main": "numeral.js",
+  "homepage": "https://github.com/adamwdraper/Numeral-js",
+  "_release": "2.0.4",
+  "_resolution": {
+    "type": "version",
+    "tag": "2.0.4",
+    "commit": "a7a2dedde724ee6c74cf3370b958c06d19c54659"
+  },
+  "_source": "https://github.com/adamwdraper/Numeral-js.git",
+  "_target": "^2.0.4",
+  "_originalSource": "numeral",
+  "_direct": true
+}

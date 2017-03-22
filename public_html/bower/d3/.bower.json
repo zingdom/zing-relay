@@ -1,0 +1,19 @@
+{
+  "name": "d3",
+  "description": "A JavaScript visualization library for HTML and SVG.",
+  "main": "d3.js",
+  "license": "BSD-3-Clause",
+  "ignore": [],
+  "homepage": "https://github.com/mbostock-bower/d3-bower",
+  "version": "4.7.3",
+  "_release": "4.7.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v4.7.3",
+    "commit": "2b473ad69025183a0460ac5973278284830e80d3"
+  },
+  "_source": "https://github.com/mbostock-bower/d3-bower.git",
+  "_target": "^4.7.3",
+  "_originalSource": "d3",
+  "_direct": true
+}

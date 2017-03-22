@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Zing Spot</title>
+
+	<link href="/bower/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/bower/SpinKit/css/spinkit.css" rel="stylesheet">
+	<link href="/bower/SpinKit/css/spinners/7-three-bounce.css" rel="stylesheet">
+	<style>
+		.jumbotron dt,
+		.jumbotron dd {
+			padding-top: 10px;
+			padding-bottom: 10px;
+			border-top: solid 1px #fff;
+		}
+
+		.right {
+			text-align: right;
+		}
+
+		.addr {
+			font-family: "Lucida Console", Monaco, monospace;
+		}
+
+		footer {
+			margin-top: 100px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<div class="header clearfix">
+			<nav>
+				<ul class="nav nav-pills pull-right">
+				</ul>
+			</nav>
+			<h3 class="text-muted">ZING</h3>
+		</div>
+
+		<div class="jumbotron">
+			<h3>Gateway Info</h3>
+			<p class="lead">
+			</p>
+			<dl id="gateway-info" class="row">
+				<div class="sk-three-bounce">
+					<div class="sk-child sk-bounce1"></div>
+					<div class="sk-child sk-bounce2"></div>
+					<div class="sk-child sk-bounce3"></div>
+				</div>
+			</dl>
+		</div>
+
+		<div class="row">
+			<div class="sk-three-bounce" id="devicesLoading">
+				<div class="sk-child sk-bounce1"></div>
+				<div class="sk-child sk-bounce2"></div>
+				<div class="sk-child sk-bounce3"></div>
+			</div>
+			<div class="col-md-12" id="devicesContainer" style="display: none">
+				<h3>Nearby Devices</h3>
+				<div class="table-responsive">
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Address</th>
+								<th>Name</th>
+								<th class="right">RSSI</th>
+							</tr>
+						</thead>
+						<tbody id="discover">
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<footer class="footer">
+			<p>&copy; 2017 ZING</p>
+		</footer>
+	</div>
+	<!-- /container -->
+
+	<script src="/bower/jquery/dist/jquery.min.js"></script>
+	<script src="/bower/numeral/min/numeral.min.js"></script>
+	<script src="/bower/moment/min/moment.min.js"></script>
+	<script src="/bower/lodash/dist/lodash.core.min.js"></script>
+	<script>
+		function appendGatewayInfoRow(items, name, val, valClass) {
+			items.push($("<dt/>", {
+				class: 'col-sm-3',
+				text: name
+			}));
+			items.push($("<dd/>", {
+				class: (valClass ? (valClass + ' ') : '') + 'col-sm-9',
+				text: val
+			}));
+		}
+
+		function makeDiscoverTableRow(val) {
+			var tr = $('<tr/>');
+			tr.append($('<td/>', {
+				html: '<input type="checkbox">'
+			}));
+			tr.append($('<td/>', {
+				class: 'addr',
+				text: val.addr
+			}));
+			tr.append($('<td/>', {
+				text: val.name
+			}));
+			tr.append($('<td/>', {
+				class: 'right',
+				text: numeral(val.rssi_total / val.rssi_count).format('0.0')
+			}));
+			return tr;
+		}
+
+		$(function () {
+			$.getJSON('/api/info', function (data) {
+				var items = [];
+				appendGatewayInfoRow(items, 'Mac', data.mac, 'addr');
+				appendGatewayInfoRow(items, 'Version', data.version);
+				$('#gateway-info').empty().append(items);
+			});
+
+			setInterval(
+				function () {
+					$.getJSON('/api/discover', function (data) {
+						$('#devicesLoading').remove();
+						$('#devicesContainer').show();
+
+						var items = [];
+						_.each(
+							_.sortBy(data, function (v) {
+								return (v.rssi_total / v.rssi_count);
+							}).reverse(),
+							function (v) {
+								console.log(v.rssi_total / v.rssi_count);
+								items.push(makeDiscoverTableRow(v));
+							});
+
+						$('#discover').empty().append(items);
+					});
+				}, 2000
+			)
+		});
+	</script>
+</body>
+
+</html>

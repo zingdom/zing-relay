@@ -35,8 +35,8 @@ class Scanner {
 	constructor() {
 		this.site = null;
 		this.myAddr = null;
-		this.mqClient = null;
 
+		this.mqClient = null;
 		this.mqCache = LRU({
 			max: 64,
 			maxAge: 1000 * 60
@@ -128,9 +128,10 @@ class Scanner {
 	start() {
 		return Promise.resolve()
 			.then(state => {
-				noble.on('discover', this.noble_onDiscover.bind(this));
+				noble.on('discover', this._nobleOnDiscover.bind(this));
 				noble.startScanning([], true);
-				setInterval(this.cacheDrain.bind(this), 100);
+
+				setInterval(this._tick.bind(this), 100);
 			});
 	}
 
@@ -156,12 +157,12 @@ class Scanner {
 			});
 	}
 
-	noble_onDiscover(peripheral) {
+	_nobleOnDiscover(peripheral) {
 		let addr = normalizeAddr(peripheral.uuid);
-		this.cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
+		this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
 	}
 
-	cacheAdd(addr, rssi, name) {
+	_cacheAdd(addr, rssi, name) {
 		let advertEntry = this.advertCache.get(addr);
 		if (typeof advertEntry === 'undefined') {
 			advertEntry = {
@@ -195,11 +196,9 @@ class Scanner {
 		if (name) {
 			mqEntry.name = name;
 		}
-
-		utils.log('BLE ', mqEntry.addr);
 	}
 
-	cacheDrain() {
+	_tick() {
 		this.mqCache.prune();
 
 		if (!this.mqClient) {

@@ -1,22 +1,26 @@
 "use strict";
 
-const chalk = require('chalk');
-const express = require('express');
-const http = require('http');
-const nconf = require('nconf');
-const passport = require('passport'),
-	BasicStrategy = require('passport-http').BasicStrategy;
-const randomstring = require('randomstring');
+var chalk = require('chalk');
+var express = require('express'),
+	app = express(),
+	sse = require('./server-sse');
 
-const package_json = require('./package.json');
-const utils = require('./utils');
+var http = require('http');
+var nconf = require('nconf');
+var passport = require('passport'),
+	BasicStrategy = require('passport-http').BasicStrategy;
+var randomstring = require('randomstring');
+
+var package_json = require('./package.json');
+var utils = require('./utils');
 
 let _username = null;
 let _password = null;
+let _connections = [];
 
 passport.use(new BasicStrategy(
 	function (username, password, done) {
-		if (!_username || username !== _username || !_password || _password != password) {
+		if (username !== _username || _password != password) {
 			return done(null, false);
 		}
 
@@ -31,7 +35,6 @@ module.exports = function (port, username, password, scanner) {
 	_password = password || randomstring.generate(8);
 
 	let spinner = utils.ora('starting server ...');
-	let app = express();
 
 	app.use('/', passport.authenticate('basic', {
 			session: false

@@ -36,6 +36,7 @@
     "passport-http": "^0.3.0",
     "passport-local": "^1.0.0",
     "randomstring": "^1.1.5",
+    "single-line-log": "^1.1.2",
     "sprintf-js": "1.x",
     "yargs": "7.x"
   }

@@ -6,7 +6,6 @@ var express = require('express'),
 	sse = require('./server-sse');
 
 var http = require('http');
-var nconf = require('nconf');
 var passport = require('passport'),
 	BasicStrategy = require('passport-http').BasicStrategy;
 var randomstring = require('randomstring');
@@ -30,9 +29,9 @@ passport.use(new BasicStrategy(
 	}
 ));
 
-module.exports = function (port, username, password, scanner) {
-	_username = username || 'admin';
-	_password = password || randomstring.generate(8);
+module.exports = function (nconf, scanner) {
+	_username = 'admin';
+	_password = nconf.get('server:password') || randomstring.generate(8);
 
 	let spinner = utils.ora('starting server ...');
 
@@ -57,7 +56,7 @@ module.exports = function (port, username, password, scanner) {
 	});
 
 	let ip = utils.myIP();
-	let server = http.createServer(app).listen(port);
+	let server = http.createServer(app).listen(nconf.get('server:port'));
 
 	spinner.finish('server', 'UP');
 
@@ -65,4 +64,5 @@ module.exports = function (port, username, password, scanner) {
 	utils.log('HTTP', 'Listening on http://' + chalk.bold(ip + ':' + server.address().port));
 	utils.log('HTTP', '    username: \'' + chalk.bold(_username) + '\'');
 	utils.log('HTTP', '    password: \'' + chalk.bold(_password) + '\'');
+	console.log();
 };

@@ -15,31 +15,20 @@ let argv = require('yargs')
 	.strict()
 	.option('port', {
 		alias: 'p',
-		describe: '// configurator port, default: <random>',
+		describe: '// dashboard port',
 		type: 'number'
 	})
 	.option('password', {
 		alias: 'w',
-		describe: '// configurator password, default: <random>',
+		default: '<random>',
+		describe: '// dashboard password',
 		type: 'string'
 	})
-	// .command('run', '// start this relay node', (yargs) => {
-	// 	yargs //
-	// 		.usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-relay run'))
-	// 		.option('uri', {
-	// 			alias: 'u',
-	// 			describe: '// MQTT server URI',
-	// 			type: 'string'
-	// 		})
-	// 		.demandOption(['uri'])
-	// }, function (argv) {
-	// 	relay
-	// 		.run(argv.uri)
-	// 		.catch(err => {
-	// 			console.error(err);
-	// 			process.exit(-1);
-	// 		});
-	// }) //
+	.option('token', {
+		alias: 't',
+		describe: '// zing site token',
+		type: 'string'
+	})
 	.help('help', '// show help')
 	.usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-spot') + ' [config_file]')
 	.argv;
@@ -47,27 +36,56 @@ let argv = require('yargs')
 let scanner = new Scanner();
 
 Promise.resolve()
-	.then(_setupConfig)
-	.then(scanner.setup.bind(scanner))
-	.then(() => server(argv.port, 'admin', argv.password, scanner))
+	.then(promiseSetupConfig)
+	.then(scanner.setup.bind(scanner, argv.token))
+	.then(() => server(nconf, scanner))
 	.then(scanner.start.bind(scanner))
 	.catch(function (err) {
-		console.error(err);
+		console.error(chalk.red('ERROR'), err);
 		process.exit(-1);
 	});
 
-function _setupConfig() {
-	let spinner = utils.ora('opening config file');
-	let configPath = argv._[0] || path.normalize(path.join((process.env.USERPROFILE || process.env.HOME), '.config', 'zing-spot.json'));
+function promiseSetupConfig() {
+	return new Promise((resolve, reject) => {
+		let spinner = utils.ora('opening config file');
+		let configPath = argv._[0] || path.normalize(path.join((process.env.USERPROFILE || process.env.HOME), '.config', 'zing-spot.json'));
 
-	// open the config file
-	nconf
-		.file({
+		// open the config file
+		nconf.file({
 			file: configPath
 		});
 
-	spinner.finish('config', configPath);
-	return nconf;
+		if (typeof argv.port !== 'undefined') {
+			if (argv.port === 0) {
+				nconf.clear('server:port');
+			} else {
+				nconf.set('server:port', argv.port);
+			}
+		}
+
+		if (typeof argv.password !== 'undefined') {
+			if (argv.password === '<random>') {
+				nconf.clear('server:password');
+			} else {
+				nconf.set('server:password', argv.password);
+			}
+		}
+
+		if (argv.token) {
+			nconf.set('token', argv.token);
+		}
+
+		nconf.save(function (err) {
+			if (err) {
+				spinner.finish('config', err);
+				reject(err);
+				return;
+			}
+
+			spinner.finish('config', configPath);
+			resolve(nconf);
+		});
+	});
 }
 
 process.on('SIGINT', function () {

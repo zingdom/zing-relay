@@ -6,17 +6,19 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<title>Zing Spot</title>
+	<title>Zing Relay</title>
 
 	<link href="/bower/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link href="/bower/SpinKit/css/spinkit.css" rel="stylesheet">
 	<link href="/bower/SpinKit/css/spinners/7-three-bounce.css" rel="stylesheet">
+	<link href="/default.css" rel="stylesheet">
 	<style>
-		.jumbotron dt,
+		.jumbotron dt {
+			text-align: right;
+		}
+		
 		.jumbotron dd {
-			padding-top: 10px;
-			padding-bottom: 10px;
-			border-top: solid 1px #fff;
+			text-align: left;
 		}
 		
 		.right {
@@ -26,10 +28,6 @@
 		.addr {
 			font-family: "Lucida Console", Monaco, monospace;
 		}
-		
-		footer {
-			margin-top: 100px;
-		}
 	</style>
 </head>
 
@@ -37,23 +35,16 @@
 	<div class="container">
 		<div class="header clearfix">
 			<nav>
-				<ul class="nav nav-pills pull-right">
-				</ul>
+				<div class="pull-right" id="relay-info">
+				</div>
 			</nav>
-			<h3 class="text-muted">ZING</h3>
+			<h3><span class="text-muted">ZING</span> <strong>RELAY</strong></h3>
 		</div>
 
 		<div class="jumbotron">
-			<h3>Gateway Info</h3>
-			<p class="lead">
-			</p>
-			<dl id="gateway-info" class="row">
-				<div class="sk-three-bounce">
-					<div class="sk-child sk-bounce1"></div>
-					<div class="sk-child sk-bounce2"></div>
-					<div class="sk-child sk-bounce3"></div>
-				</div>
-			</dl>
+			<h2>Server Disconnected</h1>
+				<p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum
+					nibh, ut fermentum massa justo sit amet risus.</p>
 		</div>
 
 		<div class="row">
@@ -63,7 +54,7 @@
 				<div class="sk-child sk-bounce3"></div>
 			</div>
 			<div class="col-md-12" id="devicesContainer" style="display: none">
-				<h3>Nearby Devices</h3>
+				<h3 class="text-muted">NEARBY DEVICES</h3>
 				<div class="table-responsive">
 					<table class="table table-striped table-hover">
 						<thead>
@@ -72,6 +63,7 @@
 								<th class="hidden-xs">Address</th>
 								<th style="width: 100%">Name</th>
 								<th class="right">RSSI</th>
+								<th class="right">Count</th>
 							</tr>
 						</thead>
 						<tbody id="discover">
@@ -92,17 +84,6 @@
 	<script src="/bower/moment/min/moment.min.js"></script>
 	<script src="/bower/lodash/dist/lodash.core.min.js"></script>
 	<script>
-		function appendGatewayInfoRow(items, name, val, valClass) {
-			items.push($("<dt/>", {
-				class: 'col-sm-3',
-				text: name
-			}));
-			items.push($("<dd/>", {
-				class: (valClass ? (valClass + ' ') : '') + 'col-sm-9',
-				text: val
-			}));
-		}
-
 		function makeDiscoverTableRow(val) {
 			var TR = $('<tr/>');
 			TR.append($('<td/>', {
@@ -127,15 +108,25 @@
 				class: 'right',
 				text: numeral(val.rssi_total / val.rssi_count).format('0.0')
 			}));
+			TR.append($('<td/>', {
+				class: 'right',
+				text: val.rssi_count
+			}));
 			return TR;
 		}
 
 		$(function () {
 			$.getJSON('/api/info', function (data) {
 				var items = [];
-				appendGatewayInfoRow(items, 'Mac', data.mac, 'addr');
-				appendGatewayInfoRow(items, 'Version', data.version);
-				$('#gateway-info').empty().append(items);
+				items.push($('<div/>', {
+					class: 'addr right',
+					text: data.mac
+				}));
+				items.push($('<div/>', {
+					class: 'right',
+					text: 'v' + data.version
+				}));
+				$('#relay-info').empty().append(items);
 			});
 
 			setInterval(
@@ -150,7 +141,6 @@
 								return (v.rssi_total / v.rssi_count);
 							}).reverse(),
 							function (v) {
-								console.log(v.rssi_total / v.rssi_count);
 								items.push(makeDiscoverTableRow(v));
 							});
 

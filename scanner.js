@@ -12,7 +12,6 @@ const url = require('url');
 const utils = require('./utils');
 
 const KalmanFilter = require('./kalman');
-const zing_pub_key = require('./zing_pub_key');
 
 function normalizeAddr(addr) {
 	let a = addr.replace(/[^0-9A-Fa-f]/g, '').toLowerCase();
@@ -125,7 +124,7 @@ class Scanner {
 			.then(this._promiseSetupNoble)
 	}
 
-	start() {
+	start(token) {
 		return Promise.resolve()
 			.then(state => {
 				noble.on('discover', this._nobleOnDiscover.bind(this));
@@ -159,6 +158,10 @@ class Scanner {
 
 	_nobleOnDiscover(peripheral) {
 		let addr = normalizeAddr(peripheral.uuid);
+		if (addr.indexOf('2015') === 0) {
+			console.log(peripheral);
+		}
+
 		this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
 	}
 

@@ -15,17 +15,17 @@ import uglify from 'gulp-uglify';
 
 
 var Paths = {
-	DIST: '../webapp/web/dist',
-	DIST_TOOLKIT_JS: '../webapp/web/dist/toolkit.js',
+	DIST: '../public_html/',
+	DIST_TOOLKIT_JS: '../public_html/toolkit.js',
 
 	SRC_HTML: './src/**/*.html',
 	SRC_CSS: './src/css/*.css',
 	SRC_TTF: './src/css/*.ttf',
 	JS_OUT: 'bundle.js',
-	DEST: '../webapp/web/',
-	DEST_HTML: '../webapp/**/*.html',
-	DEST_CSS: '../webapp/**/*.css',
-	DEST_DIST_SRC: '../webapp/web/dist/js/'
+	DEST: '../public_html/',
+	DEST_HTML: '../public_html/**/*.html',
+	DEST_CSS: '../public_html/**/*.css',
+	DEST_DIST_SRC: '../public_html/js/'
 }
 
 gulp.task('default', [

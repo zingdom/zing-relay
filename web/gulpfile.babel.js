@@ -1,6 +1,7 @@
 import gulp from "gulp";
 
 import g_util from "gulp-util";
+import g_less from "gulp-less";
 import g_autoprefixer from "gulp-autoprefixer";
 import g_sourcemaps from "gulp-sourcemaps";
 import g_rename from "gulp-rename";
@@ -16,22 +17,18 @@ import uglify from 'gulp-uglify';
 
 var Paths = {
 	DIST: '../public_html/',
-	DIST_TOOLKIT_JS: '../public_html/toolkit.js',
-
 	SRC_HTML: './src/**/*.html',
-	SRC_CSS: './src/css/*.css',
-	SRC_TTF: './src/css/*.ttf',
+	SRC_LESS: './src/less/*.less',
 	JS_OUT: 'bundle.js',
 	DEST: '../public_html/',
 	DEST_HTML: '../public_html/**/*.html',
-	DEST_CSS: '../public_html/**/*.css',
 	DEST_DIST_SRC: '../public_html/js/'
 }
 
 gulp.task('default', [
-	'js',
 	'browserify',
-	'copy-html-css',
+	'less',
+	'copy-html',
 	'server',
 	'watch'
 ]);
@@ -43,7 +40,7 @@ let browserifySettings = {
 	transform: [
 		[
 			babelify, {
-				"presets": ["react", "stage-0", "es2015"]
+				"presets": ["react", "es2015", "stage-0"]
 			}
 		]
 	],
@@ -51,11 +48,6 @@ let browserifySettings = {
 	cache: {},
 	packageCache: {}
 };
-
-gulp.task('copy-html-css', () => {
-	gulp.src([Paths.SRC_HTML, Paths.SRC_CSS, Paths.SRC_TTF]).
-	pipe(gulp.dest(Paths.DEST));
-});
 
 
 gulp.task('browserify', () => {
@@ -71,7 +63,7 @@ gulp.task('browserify', () => {
 });
 
 gulp.task('watch', function () {
-	gulp.watch([Paths.SRC_HTML, Paths.SRC_CSS], ['copy-html-css', 'reload-html-css']);
+	gulp.watch([Paths.SRC_HTML, Paths.SRC_LESS], ['less', 'copy-html', 'reload-html']);
 
 	let watcher = watchify(browserify(browserifySettings));
 	return watcher.on('update', (ids) => {
@@ -83,7 +75,7 @@ gulp.task('watch', function () {
 			pipe(v_source(Paths.JS_OUT)). // gives streaming vinyl file object
 			pipe(buffer()). // <----- convert from streaming to buffered vinyl file object
 			pipe(g_rename('bundle.min.js')).
-			pipe(uglify()). // now gulp-uglify works 
+			// pipe(uglify()). // now gulp-uglify works 
 			pipe(gulp.dest(Paths.DEST_DIST_SRC)). //
 			pipe(g_connect.reload());
 
@@ -99,7 +91,7 @@ gulp.task('watch', function () {
 	pipe(v_source(Paths.JS_OUT)). // gives streaming vinyl file object
 	pipe(buffer()). // <----- convert from streaming to buffered vinyl file object
 	pipe(g_rename('bundle.min.js')).
-	pipe(uglify()). // now gulp-uglify works 
+	// pipe(uglify()). // now gulp-uglify works 
 	pipe(gulp.dest(Paths.DEST_DIST_SRC)). //
 	pipe(g_connect.reload());
 })
@@ -111,9 +103,20 @@ gulp.task('server', function () {
 		debug: true,
 		livereload: true
 	})
-})
-
-gulp.task('reload-html-css', function () {
-	gulp.src([Paths.DEST_HTML, Paths.DEST_CSS]).pipe(g_connect.reload());
 });
 
+gulp.task('less', function () {
+	return gulp.src(Paths.SRC_LESS).
+	pipe(g_less()).
+	pipe(gulp.dest(Paths.DIST));
+});
+
+
+gulp.task('copy-html', () => {
+	gulp.src([Paths.SRC_HTML]).
+	pipe(gulp.dest(Paths.DEST));
+});
+
+gulp.task('reload-html', function () {
+	gulp.src([Paths.DEST_HTML]).pipe(g_connect.reload());
+});

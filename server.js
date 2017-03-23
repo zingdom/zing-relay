@@ -3,6 +3,7 @@
 var chalk = require('chalk');
 var express = require('express'),
 	app = express(),
+	cors = require('cors'),
 	sse = require('./server-sse');
 
 var http = require('http');
@@ -34,7 +35,7 @@ module.exports = function (nconf, scanner) {
 	_password = nconf.get('server:password') || randomstring.generate(8);
 
 	let spinner = utils.ora('starting server ...');
-
+	app.use(cors());
 	app.use('/', passport.authenticate('basic', {
 			session: false
 		}),

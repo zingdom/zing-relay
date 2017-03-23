@@ -1,17 +1,16 @@
 "use strict";
 
-const chalk = require('chalk');
-const fs = require('fs');
-const getmac = require('getmac');
-const jwt = require('jsonwebtoken');
-const LRU = require('lru-cache');
-const mqtt = require('mqtt');
-const noble = require('noble');
-const sprintf = require('sprintf-js').sprintf;
-const url = require('url');
-const utils = require('./utils');
+var chalk = require('chalk');
+var https = require('https');
+var getmac = require('getmac');
+var LRU = require('lru-cache');
+var mqtt = require('mqtt');
+var noble = require('noble');
+var sprintf = require('sprintf-js').sprintf;
+var url = require('url');
+var utils = require('./utils');
 
-const KalmanFilter = require('./kalman');
+var KalmanFilter = require('./kalman');
 
 function normalizeAddr(addr) {
 	let a = addr.replace(/[^0-9A-Fa-f]/g, '').toLowerCase();
@@ -34,7 +33,9 @@ class Scanner {
 	constructor() {
 		this.site = null;
 		this.myAddr = null;
+		this.tickCounter = 0;
 
+		this.mqAccess = null;
 		this.mqClient = null;
 		this.mqCache = LRU({
 			max: 64,
@@ -48,7 +49,7 @@ class Scanner {
 	}
 
 	_promiseSetupNoble() {
-		return new Promise((resolve, reject) => {
+		return new Promise(function (resolve, reject) {
 			let spinner = utils.ora('initializing BLE...').start();
 
 			let counter = 0;
@@ -71,7 +72,7 @@ class Scanner {
 	}
 
 	_promiseGetMac() {
-		return new Promise((resolve, reject) => {
+		return new Promise(function (resolve, reject) {
 			let spinner = utils.ora('getting address...').start();
 
 			getmac.getMac((err, addr) => {
@@ -88,26 +89,63 @@ class Scanner {
 		});
 	}
 
-	_promiseSetupMqttClient(mqttUri) {
-		return new Promise((resolve, reject) => {
+	_promiseVerifyToken(token) {
+		if (token) {
+			return new Promise(function (resolve, reject) {
+				let spinner = utils.ora('connecting to zing...').start();
+
+				let reqOpts = {
+					host: 'api.zing.fm',
+					port: 443,
+					path: sprintf('/v1/ext/%s', token),
+					headers: {
+						accept: 'application/json'
+					}
+				};
+				let req = https.request(reqOpts, function (res) {
+					let body = [];
+					res.on('data', function (chunk) {
+						body.push(chunk);
+					});
+					res.on('end', function () {
+						let json = JSON.parse(Buffer.concat(body));
+						if (json.success && json.data) {
+							spinner.finish('token', 'VERIFIED');
+							resolve(json.data);
+						} else {
+							let err = new Error(json);
+							spinner.finish('token', err);
+							reject(err);
+						}
+					});
+				});
+				req.on('error', function (err) {
+					spinner.finish('token', err);
+					reject(err);
+				});
+				req.end();
+			});
+		}
+	}
+
+	_promiseSetupMqttClient(mqAccess) {
+		return new Promise(function (resolve, reject) {
 			let spinner = utils.ora('connecting...').start();
 
+			let mqttUri = sprintf('mqtts://%s:%s@%s', mqAccess.name, mqAccess.password, mqAccess.host);
 			let client = mqtt.connect(mqttUri);
 
 			client.on('connect', function () {
 				spinner.finish('MQTT', 'CONNECTED');
 				resolve(client);
 			});
-
 			client.on('error', function (err) {
 				spinner.finish('MQTT', err);
 				reject(err);
 			});
-
 			client.on('reconnect', function () {
 				console.error('MQTT reconnecting...');
 			});
-
 			client.on('close', function () {
 				console.error('MQTT closed...');
 				process.exit(-1);
@@ -115,16 +153,28 @@ class Scanner {
 		});
 	}
 
-	setup() {
+	setup(token) {
 		return Promise.resolve()
-			.then(this._promiseGetMac)
+			.then(this._promiseGetMac.bind(this))
 			.then(addr => {
 				this.myAddr = addr;
+			})
+			.then(this._promiseVerifyToken.bind(this, token))
+			.then(mqAccess => {
+				if (mqAccess) {
+					this.mqAccess = mqAccess;
+					return this._promiseSetupMqttClient(mqAccess);
+				}
+			})
+			.then(mqClient => {
+				if (mqClient) {
+					// this.mqClient = mqClient;
+				}
 			})
 			.then(this._promiseSetupNoble)
 	}
 
-	start(token) {
+	start() {
 		return Promise.resolve()
 			.then(state => {
 				noble.on('discover', this._nobleOnDiscover.bind(this));
@@ -202,6 +252,14 @@ class Scanner {
 	}
 
 	_tick() {
+		this.tickCounter++;
+		if (this.tickCounter % 10 === 1) {
+
+		}
+		if (this.tickCounter % 10 === 0) {
+
+		}
+
 		this.mqCache.prune();
 
 		if (!this.mqClient) {

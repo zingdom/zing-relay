@@ -30,7 +30,7 @@ let argv = require('yargs')
 		type: 'string'
 	})
 	.help('help', '// show help')
-	.usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-spot') + ' [config_file]')
+	.usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-relay') + ' [config_file]')
 	.argv;
 
 let scanner = new Scanner();
@@ -48,7 +48,7 @@ Promise.resolve()
 function promiseSetupConfig() {
 	return new Promise((resolve, reject) => {
 		let spinner = utils.ora('opening config file');
-		let configPath = argv._[0] || path.normalize(path.join((process.env.USERPROFILE || process.env.HOME), '.config', 'zing-spot.json'));
+		let configPath = argv._[0] || path.normalize(path.join((process.env.USERPROFILE || process.env.HOME), '.config', 'zing-relay.json'));
 
 		// open the config file
 		nconf.file({

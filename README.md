@@ -59,13 +59,12 @@ default password: `raspberry`
 1. Install bluez from source
 	- Install dependencies first
 	<pre>
-	pi@raspberrypi:~ $ <strong>sudo apt install -y \
-			libusb-dev \
-			libdbus-1-dev \
-			libglib2.0-dev \
-			libudev-dev \
-			libical-dev \
-			libreadline-dev</strong>
+	pi@raspberrypi:~ $ <strong>sudo apt install -y libusb-dev \
+	                                       libdbus-1-dev \
+	                                       libglib2.0-dev \
+	                                       libudev-dev \
+	                                       libical-dev \
+	                                       libreadline-dev</strong>
 	</pre>
 
 	- Download the latest version of bluez (v5.44) from http://www.bluez.org/download/

@@ -42,15 +42,25 @@ module.exports = function (nconf, scanner) {
 		express.static('public_html'));
 
 	app.get('/api/info', function (req, res) {
-		res.json({
+		let info = {
 			mac: scanner.myAddr,
-			version: package_json.version
-		});
+			version: package_json.version,
+		};
+
+		if (scanner.mqClient) {
+			info.mqtt = {
+				status: scanner.mqClient.reconnecting ? 'reconnecting' : (scanner.mqClient.connected ? 'connected' : 'disconnected'),
+				access: scanner.mqAccess,
+				count: scanner.mqCounter
+			};
+		}
+
+		res.json(info);
 	});
 
 	app.get('/api/discover', function (req, res) {
 		let ret = [];
-		scanner.mqCache.forEach(function (value, key) {
+		scanner.nearbyDeviceCache.forEach(function (value, key) {
 			ret.push(value);
 		});
 		res.json(ret);

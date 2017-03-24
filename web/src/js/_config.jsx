@@ -2,24 +2,24 @@
 export const API = '/api/';
 
 export function wrapRequest(request) {
-    if (!request) {
-        request = {
-            method: "GET",
-            headers: {}
-        };
-    }
+	if (!request) {
+		request = {
+			method: "GET",
+			headers: {}
+		};
+	}
 
-    const headerAdditions = {
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Authorization": "Basic YWRtaW46ZGJGTVM2NHA="
-        }
-    };
+	const headerAdditions = {
+		headers: {
+			"Content-Type": "application/json",
+			"Accept": "application/json",
+			"Authorization": "Basic YWRtaW46ZGJGTVM2NHA="
+		}
+	};
 
 
-    Object.assign(request, headerAdditions);
+	Object.assign(request, headerAdditions);
 
-    return request;
+	return request;
 
 }

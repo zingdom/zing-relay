@@ -35,12 +35,19 @@ class Scanner {
 		this.myAddr = null;
 		this.mqAccess = null;
 		this.mqClient = null;
+		this.mqCounter = 0;
+
+		this.tracked = [];
 		this.mqCache = LRU({
 			max: 64,
 			maxAge: 1000 * 60
 		});
-		this.advertCache = LRU({
+		this.randomAddrFilterCache = LRU({
 			max: 1024,
+			maxAge: 1000 * 60 * 5
+		});
+		this.nearbyDeviceCache = LRU({
+			max: 64,
 			maxAge: 1000 * 60
 		});
 		// this.kalman = new KalmanFilter(0.01, 5, 1);
@@ -153,7 +160,7 @@ class Scanner {
 
 	setup(token) {
 		return Promise.resolve()
-			.then(this._promiseGetMac.bind(this))
+			.then(this._promiseGetMac)
 			.then(addr => {
 				this.myAddr = addr;
 			})
@@ -166,7 +173,7 @@ class Scanner {
 			})
 			.then(mqClient => {
 				if (mqClient) {
-					// this.mqClient = mqClient;
+					this.mqClient = mqClient;
 				}
 			})
 			.then(this._promiseSetupNoble)
@@ -182,28 +189,6 @@ class Scanner {
 			});
 	}
 
-	run2(mqttUri) {
-		return Promise.resolve()
-			.then(addr => {
-				let auth = url.parse(mqttUri).auth;
-				if (typeof auth === 'undefined') {
-					throw new Error('badly formatted MQTT URI');
-				}
-
-				this.site = auth.substring(0, auth.indexOf('-'));
-				console.log('site', this.site);
-
-				return mqttUri;
-			})
-			.then(this._promiseSetupMqttClient)
-			.then(client => {
-				this.mqClient = client;
-			})
-			.then(state => {
-
-			});
-	}
-
 	_nobleOnDiscover(peripheral) {
 		let addr = normalizeAddr(peripheral.uuid);
 		if (addr.indexOf('2015') === 0) {
@@ -214,79 +199,127 @@ class Scanner {
 	}
 
 	_cacheAdd(addr, rssi, name) {
-		let advertEntry = this.advertCache.get(addr);
-		if (typeof advertEntry === 'undefined') {
-			advertEntry = {
+		let addrEntry = this.randomAddrFilterCache.get(addr);
+		if (typeof addrEntry === 'undefined') {
+			addrEntry = {
+				count: 0
+			}
+			this.randomAddrFilterCache.set(addr, addrEntry);
+		}
+		addrEntry++;
+
+		let nearbyEntry = this.nearbyDeviceCache.get(addr);
+		if (typeof nearbyEntry === 'undefined') {
+			nearbyEntry = {
+				addr: addr,
+				rssi: rssi,
 				count: 0
 			};
-			this.advertCache.set(addr, advertEntry);
 		}
-		advertEntry.count++;
-
-		let mqEntry = this.mqCache.get(addr);
-		if (typeof mqEntry === 'undefined') {
-			mqEntry = {
-				'addr': addr,
-				'rssi_total': 0,
-				'rssi_count': 0
-			};
-			this.mqCache.set(addr, mqEntry);
-		}
-
-		// timestamp
-		mqEntry.time = new Date().getTime();
-		mqEntry.published = false;
-
-		// rssi
-		if (rssi < 0) { // ignore invalid RSSI (rssi >= 0)
-			mqEntry.rssi_total += rssi;
-			mqEntry.rssi_count += 1;
-		}
-
-		// device name
+		nearbyEntry.rssi = rssi;
+		nearbyEntry.count++;
 		if (name) {
-			mqEntry.name = name;
+			nearbyEntry.name = name;
 		}
+		this.nearbyDeviceCache.set(addr, nearbyEntry);
+
+		nearbyEntry.tracked = this.tracked.indexOf(addr) >= 0;
+		if (nearbyEntry.tracked) {
+			let mqEntry = this.mqCache.get(addr);
+			if (typeof mqEntry === 'undefined') {
+				mqEntry = {
+					'addr': addr,
+					'rssi_total': 0,
+					'rssi_count': 0
+				};
+				this.mqCache.set(addr, mqEntry);
+			}
+
+			mqEntry.time = new Date().getTime();
+			if (rssi < 0) { // ignore invalid RSSI (rssi >= 0)
+				mqEntry.rssi_total += rssi;
+				mqEntry.rssi_count += 1;
+			}
+			if (name) {
+				mqEntry.name = name;
+			}
+		}
+	}
+
+	_updateTrackedList(token) {
+		return new Promise(function (resolve, reject) {
+			let reqOpts = {
+				host: 'api.zing.fm',
+				port: 443,
+				path: sprintf('/v1/ext/%s/device', token),
+				headers: {
+					accept: 'application/json'
+				}
+			};
+			https.request(reqOpts, function (res) {
+					let body = [];
+					res.on('data', function (chunk) {
+						body.push(chunk);
+					});
+					res.on('end', function () {
+						let json = JSON.parse(Buffer.concat(body));
+						if (json.success && json.data) {
+							resolve(json.data);
+						} else {
+							let err = new Error(json);
+							reject(err);
+						}
+					});
+				})
+				.on('error', function (err) {
+					reject(err);
+				})
+				.end();
+		});
 	}
 
 	_tick() {
 		this.tickCounter++;
-		if (this.tickCounter % 10 === 1) {
-
+		if (this.tickCounter % 100 === 1) {
+			if (this.mqAccess) {
+				this._updateTrackedList(this.mqAccess.id)
+					.then(list => {
+						this.tracked = list;
+					})
+					.catch(err => {
+						utils.log('API', err);
+					});
+			}
 		}
+
 		if (this.tickCounter % 10 === 0) {
-
-		}
-
-		this.mqCache.prune();
-
-		if (!this.mqClient) {
-			return;
+			this.nearbyDeviceCache.prune();
 		}
 
 		this.mqCache
 			.rforEach((value, key) => {
-				let advertEntry = this.advertCache.peek(value.addr);
-				if (advertEntry && advertEntry.count > 1 && value.rssi_count >= 1) {
-					this.mqCache.del(value.addr);
-
-					let age = Math.round((new Date().getTime() - value.time) / 65.536);
-					let buffer = new Buffer(16);
-					buffer[0] = (age >> 8) & 0xFF;
-					buffer[1] = age & 0xFF;
-					addrToBuffer(this.myAddr, buffer, 2);
-					addrToBuffer(value.addr, buffer, 8);
-					buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
-					buffer[15] = value.rssi_count;
-
-					console.log(chalk.dim('[MQTT]'),
-						buffer,
-						value.name ? value.name : '');
-
-					let topic = sprintf('site/%s/%s', this.mqConnOptions.sub, this.myAddr);
-					this.mqClient.publish(topic, buffer);
-					return;
+				if (value.rssi_count === 0) {
+					contine;
 				}
+
+				this.mqCache.del(value.addr);
+
+				let age = Math.round((new Date().getTime() - value.time) / 65.536);
+				let buffer = new Buffer(16);
+				buffer[0] = (age >> 8) & 0xFF;
+				buffer[1] = age & 0xFF;
+				addrToBuffer(this.myAddr, buffer, 2);
+				addrToBuffer(value.addr, buffer, 8);
+				buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
+				buffer[15] = value.rssi_count;
+
+				utils.log('MQTT', buffer);
+
+				let topic = sprintf('site/%s/relay/%s', this.mqAccess.siteKey, this.myAddr);
+				this.mqClient.publish(topic, buffer);
+				this.mqCounter++;
+
+				return;
 			});
 	}
 }

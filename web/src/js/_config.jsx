@@ -1,5 +1,5 @@
 
-export const API = '';
+export const API = '/api/';
 
 export function wrapRequest(request) {
     if (!request) {

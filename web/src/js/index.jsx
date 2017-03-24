@@ -1,7 +1,7 @@
 import { Router, Route, hashHistory, IndexRoute } from "react-router";
-import history from 'connect-history-api-fallback';
 import App from './App';
-import React, { Component } from 'React';
+import history from 'connect-history-api-fallback';
+import React, { Component } from 'react';
 import ReactDOM from "react-dom";
 
 ReactDOM.render((

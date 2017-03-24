@@ -32,7 +32,7 @@ passport.use(new BasicStrategy(
 
 module.exports = function (nconf, scanner) {
 	_username = 'admin';
-	_password = nconf.get('server:password') || randomstring.generate(8);
+	_password = nconf.get('dash:password') || randomstring.generate(8);
 
 	let spinner = utils.ora('starting server ...');
 	app.use(cors());
@@ -57,7 +57,7 @@ module.exports = function (nconf, scanner) {
 	});
 
 	let ip = utils.myIP();
-	let server = http.createServer(app).listen(nconf.get('server:port'));
+	let server = http.createServer(app).listen(nconf.get('dash:port'));
 
 	spinner.finish('server', 'UP');
 

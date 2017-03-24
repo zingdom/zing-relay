@@ -74,7 +74,7 @@ gulp.task('watch', function () {
 			pipe(v_source(Paths.JS_OUT)). // gives streaming vinyl file object
 			pipe(buffer()). // <----- convert from streaming to buffered vinyl file object
 			pipe(g_rename('bundle.min.js')).
-			pipe(uglify()). // now gulp-uglify works 
+			// pipe(uglify()). // now gulp-uglify works 
 			pipe(gulp.dest(Paths.DEST_DIST_SRC)). //
 			pipe(g_connect.reload());
 
@@ -90,7 +90,7 @@ gulp.task('watch', function () {
 	pipe(v_source(Paths.JS_OUT)). // gives streaming vinyl file object
 	pipe(buffer()). // <----- convert from streaming to buffered vinyl file object
 	pipe(g_rename('bundle.min.js')).
-	pipe(uglify()). // now gulp-uglify works 
+	// pipe(uglify()). // now gulp-uglify works 
 	pipe(gulp.dest(Paths.DEST_DIST_SRC)). //
 	pipe(g_connect.reload());
 })

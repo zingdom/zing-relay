@@ -460,3 +460,12 @@
 .r-t-r-sm {
   border-top-right-radius: 2px;
 }
+.text-md {
+  font-size: 18pt;
+}
+.text-sm {
+  font-size: 12pt;
+}
+.text-xs {
+  font-size: 10pt;
+}

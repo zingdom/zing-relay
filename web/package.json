@@ -41,9 +41,11 @@
     "intl": "1.x",
     "lodash": "^4.17.4",
     "numeral": "^2.0.4",
+    "react-animated-number": "^0.4.2",
     "react-bootstrap": "^0.30.8",
     "react-bootstrap-table": "^3.1.1",
     "react-faux-dom": "^3.0.0",
+    "react-icons": "^2.2.3",
     "react-router": "3.x",
     "whatwg-fetch": "2.x"
   }

@@ -31,10 +31,8 @@ function addrToBuffer(addr, buffer, index) {
 
 class Scanner {
 	constructor() {
-		this.site = null;
-		this.myAddr = null;
 		this.tickCounter = 0;
-
+		this.myAddr = null;
 		this.mqAccess = null;
 		this.mqClient = null;
 		this.mqCache = LRU({

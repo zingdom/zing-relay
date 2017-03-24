@@ -1,5 +1,5 @@
 
-export const API = 'http://192.168.86.112:39511/api/';
+export const API = '';
 
 export function wrapRequest(request) {
     if (!request) {

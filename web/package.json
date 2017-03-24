@@ -37,7 +37,6 @@
 		"watchify": "3.x"
 	},
 	"dependencies": {
-		"connect-history-api-fallback": "1.x",
 		"intl": "1.x",
 		"lodash": "4.x",
 		"numeral": "2.x",

@@ -1,11 +1,13 @@
-import { Router, Route, hashHistory, IndexRoute } from "react-router";
+import { Router, Route, IndexRoute } from "react-router";
+import createBrowserHistory from 'history/createBrowserHistory';
 import App from './App';
-import history from 'connect-history-api-fallback';
 import React, { Component } from 'react';
 import ReactDOM from "react-dom";
 
+const history = createBrowserHistory();
+
 ReactDOM.render((
-	<Router history={hashHistory}>
+	<Router history={history}>
 		<Route path="/" component={App} />
 	</Router>
 ), document.getElementById('app'));

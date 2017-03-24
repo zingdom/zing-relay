@@ -2,7 +2,7 @@ import 'whatwg-fetch';
 import _ from 'lodash';
 import { API, wrapRequest } from './_config';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-import { Row, Col, Jumbotron, Button, PageHeader, Modal, FormGroup, FormControl, ControlLabel, Checkbox, ButtonToolbar, Alert } from 'react-bootstrap';
+import { Row, Col, Jumbotron, Button, PageHeader, Modal, FormGroup, FormControl, ControlLabel, Checkbox, Alert } from 'react-bootstrap';
 import AnimatedNumber from 'react-animated-number';
 import Check from 'react-icons/lib/io/checkmark-round';
 import numeral from 'numeral';
@@ -11,18 +11,23 @@ import React, { Component } from 'react';
 export default class App extends Component {
 	constructor(props) {
 		super(props);
+
 		this.state = {
 			open: false
 		};
 	}
 
 	componentWillMount() {
-		fetch(API + 'discover', wrapRequest()).then(response => response.json()).then(json => this.setState({ discover: json }));
-		fetch(API + 'info', wrapRequest()).then(response => response.json()).then(json => this.setState({ info: json }));
-		this.interval = setInterval(() =>
-			fetch(API + 'discover', wrapRequest()).then(response => response.json()).then(json => this.setState({ discover: json }))
-				.then(fetch(API + 'info', wrapRequest()).then(response => response.json()).then(json => this.setState({ info: json })))
-			, 5000);
+		this.interval = setInterval(() => {
+			fetch(API + 'info', wrapRequest())
+				.then(resp => resp.json())
+				.then(json => this.setState({ info: json }));
+			fetch(API + 'discover', wrapRequest())
+				.then(resp => resp.json())
+				.then(json => this.setState({ discover: json }));
+		}
+			// 	.then(() => 
+			, 1000);
 	}
 
 	componentWillUnmount() {
@@ -44,7 +49,7 @@ export default class App extends Component {
 		return (
 			<span>
 				<div><strong>{row.name}</strong></div>
-				<div className="visible-xs text-muted">&nbsp;{row.addr}</div>
+				<div className="visible-xs text-muted addr">&nbsp;{row.addr}</div>
 			</span>
 		);
 	}
@@ -75,7 +80,6 @@ export default class App extends Component {
 			clickToSelect: true,
 			onSelect: this.open.bind(this)
 		};
-		console.log(this.state.discover)
 		return (
 			<span>
 				<Modal show={this.state.open} onHide={this.close.bind(this)}>
@@ -127,7 +131,7 @@ export default class App extends Component {
 						</PageHeader>
 						<Jumbotron className="p-a r-a">
 							<h1 className="server-site text-center"><strong>{this.state.info && this.state.info.mqtt ? this.state.info.mqtt.access.siteKey : "-"}</strong></h1>
-							<h3 className="server-status text-center"><strong className={this.state.info && this.state.info.mqtt.status == 'connected' ? "success" : "danger"}>{this.state.info && this.state.info.mqtt ? "Server " + this.state.info.mqtt.status : "Server Disconnected"}</strong></h3>
+							<h3 className="server-status text-center"><strong className={this.state.info && this.state.info.mqtt && this.state.info.mqtt.status == 'connected' ? "success" : "danger"}>{this.state.info && this.state.info.mqtt ? "Server " + this.state.info.mqtt.status : "Server Disconnected"}</strong></h3>
 							<h4 className="server-status text-center text-muted"><strong><AnimatedNumber value={this.state.info && this.state.info.mqtt ? this.state.info.mqtt.count : 0}
 								style={{
 									transition: '0.8s ease-out',
@@ -137,7 +141,7 @@ export default class App extends Component {
 								formatValue={n => { return numeral(n).format('0,0') }}
 								duration={300} /> Messages</strong></h4>
 						</Jumbotron>
-						<BootstrapTable data={this.state.discover} striped={true} hover={true} selectRow={selectRow} bordered={false} options={{ defaultSortName: 'rssi' }}>
+						<BootstrapTable data={this.state.discover} striped={true} hover={true} selectRow={selectRow} bordered={false} options={{ defaultSortName: 'rssi', defaultSortOrder: 'desc' }}>
 							<TableHeaderColumn dataField="addr" isKey={true} dataSort={true} className="hidden-xs" columnClassName='hidden-xs'>Address</TableHeaderColumn>
 							<TableHeaderColumn dataField="tracked" dataSort={true} dataFormat={this.trackedFormatter} dataAlign="center">Tracked</TableHeaderColumn>
 							<TableHeaderColumn dataField="name" dataFormat={this.nameFormatter} dataSort={true}>Name</TableHeaderColumn>

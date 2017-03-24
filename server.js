@@ -66,6 +66,8 @@ module.exports = function (nconf, scanner) {
 		res.json(ret);
 	});
 
+	app.post('/api/register', function (req, res) {});
+
 	let ip = utils.myIP();
 	let server = http.createServer(app).listen(nconf.get('dash:port'));
 

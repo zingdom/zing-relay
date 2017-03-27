@@ -2,14 +2,19 @@
 
 "use strict";
 
-const chalk = require('chalk');
-const figlet = require('figlet');
-const nconf = require('nconf');
-const path = require('path');
-const package_json = require('./package.json');
-const Scanner = require('./scanner');
-const server = require('./server');
-const utils = require('./utils');
+var chalk = require('chalk');
+var figlet = require('figlet');
+var nconf = require('nconf');
+var path = require('path');
+var package_json = require('./package.json');
+var Scanner = require('./scanner');
+var server = require('./server');
+var updateNotifier = require('update-notifier');
+var utils = require('./utils');
+
+updateNotifier({
+	package_json
+}).notify();
 
 let argv = require('yargs')
 	.strict()

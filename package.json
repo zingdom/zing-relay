@@ -37,6 +37,7 @@
 		"randomstring": "1.x",
 		"single-line-log": "1.x",
 		"sprintf-js": "1.x",
+		"update-notifier": "2.x",
 		"yargs": "7.x"
 	}
 }

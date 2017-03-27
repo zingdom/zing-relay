@@ -13,7 +13,7 @@ var updateNotifier = require('update-notifier');
 var utils = require('./utils');
 
 updateNotifier({
-	package_json
+	pkg: package_json
 }).notify();
 
 let argv = require('yargs')

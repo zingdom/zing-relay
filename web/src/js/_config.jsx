@@ -8,10 +8,13 @@ export function wrapRequest(request) {
 		};
 	}
 
+	const encoded = Buffer.from('api:16CHAR_API_TOKEN').toString('base64');
+
 	const headerAdditions = {
 		headers: {
 			'Content-Type': 'application/json',
-			'Accept': 'application/json'
+			'Accept': 'application/json',
+			'Authorization': 'Basic ' + encoded
 		}
 	};
 

@@ -21,13 +21,15 @@ let _connections = [];
 
 passport.use(new BasicStrategy(
 	function (userid, password, verified) {
-		if (userid !== _username || _password != password) {
-			return verified(null, false);
+		if (userid === _username && password === _password) {
+			return verified(null, {
+				token: _apiToken
+			});
 		}
-
-		return verified(null, {
-			token: _apiToken
-		});
+		if (password === _apiToken) {
+			return verified(null, true);
+		}
+		return verified(null, false);
 	}
 ));
 

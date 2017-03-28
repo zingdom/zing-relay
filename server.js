@@ -3,8 +3,7 @@
 var chalk = require('chalk');
 var express = require('express'),
 	app = express(),
-	cors = require('cors'),
-	sse = require('./server-sse');
+	cors = require('cors');
 
 var http = require('http');
 var passport = require('passport'),

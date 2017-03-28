@@ -296,9 +296,9 @@ class Scanner {
 				buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
 				buffer[15] = value.rssi_count;
 
-				utils.log(this.tickCounter, 'MQTT: ' + buffer.toString('hex'));
+				utils.sll(this.tickCounter, 'MQTT: ' + buffer.toString('hex'));
 
-				let topic = sprintf('site/%s/relay/%s', this.mqAccess.siteKey, this.myAddr);
+				let topic = sprintf('s/%s/r/%s', this.mqAccess.siteKey, this.myAddr);
 				this.mqClient.publish(topic, buffer);
 				this.mqCounter++;
 

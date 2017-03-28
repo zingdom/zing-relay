@@ -33,6 +33,11 @@ gulp.task('default', [
 	'watch'
 ]);
 
+gulp.task('production', [
+	'apply-prod-environment',
+	'default'
+]);
+
 let browserifySettings = {
 	debug: true,
 	entries: ['./src/js/index.jsx'],
@@ -49,50 +54,55 @@ let browserifySettings = {
 	packageCache: {}
 };
 
+gulp.task('apply-prod-environment', function () {
+	console.log('setting NODE_ENV to \'producution\'');
+	process.env.NODE_ENV = 'production';
+});
 
-gulp.task('browserify', () => {
-	return browserify(browserifySettings).
-	bundle(). //
-	pipe(v_source(Paths.JS_OUT)). // gives streaming vinyl file object
-	pipe(buffer()). // <----- convert from streaming to buffered vinyl file object
-	pipe(g_rename('bundle.min.js')).
-	pipe(uglify()). // now gulp-uglify works 
-	pipe(gulp.dest(Paths.DEST_DIST_SRC)). //
-	on('error', g_util.log);
+gulp.task('browserify', function () {
+	return browserify(browserifySettings)
+		.bundle()
+		.pipe(v_source(Paths.JS_OUT)) // gives streaming vinyl file object
+		.pipe(buffer()) // <----- convert from streaming to buffered vinyl file object
+		.pipe(g_rename('bundle.min.js'))
+		.pipe(uglify()) // now gulp-uglify works 
+		.pipe(gulp.dest(Paths.DEST_DIST_SRC))
+		.on('error', g_util.log);
 });
 
 gulp.task('watch', function () {
 	gulp.watch([Paths.SRC_HTML, Paths.SRC_LESS], ['less', 'copy-html', 'reload-html']);
 
 	let watcher = watchify(browserify(browserifySettings));
-	return watcher.on('update', (ids) => {
+	return watcher.on('update', ids => {
 			// on update
-			watcher.bundle().on('error', (err) => {
-				g_util.log(err);
-				this.emit('end');
-			}). //
-			pipe(v_source(Paths.JS_OUT)). // gives streaming vinyl file object
-			pipe(buffer()). // <----- convert from streaming to buffered vinyl file object
-			pipe(g_rename('bundle.min.js')).
-			pipe(uglify()). // now gulp-uglify works 
-			pipe(gulp.dest(Paths.DEST_DIST_SRC)). //
-			pipe(g_connect.reload());
+			watcher.bundle()
+				.on('error', err => {
+					g_util.log(err);
+					this.emit('end');
+				})
+				.pipe(v_source(Paths.JS_OUT)) // gives streaming vinyl file object
+				.pipe(buffer()) // <----- convert from streaming to buffered vinyl file object
+				.pipe(g_rename('bundle.min.js'))
+				.pipe(uglify()) // now gulp-uglify works 
+				.pipe(gulp.dest(Paths.DEST_DIST_SRC)) //
+				.pipe(g_connect.reload());
 
 			console.log('Update triggered.', ids);
 		})
 		// first time when 'watch' task get called
-		.on('log', (msg) => {
+		.on('log', msg => {
 			console.log(msg);
-		}).bundle().on('error', (err) => {
+		}).bundle().on('error', err => {
 			g_util.log(err);
 			this.emit('end');
-		}). //
-	pipe(v_source(Paths.JS_OUT)). // gives streaming vinyl file object
-	pipe(buffer()). // <----- convert from streaming to buffered vinyl file object
-	pipe(g_rename('bundle.min.js')).
-	pipe(uglify()). // now gulp-uglify works 
-	pipe(gulp.dest(Paths.DEST_DIST_SRC)). //
-	pipe(g_connect.reload());
+		})
+		.pipe(v_source(Paths.JS_OUT)) // gives streaming vinyl file object
+		.pipe(buffer()) // <----- convert from streaming to buffered vinyl file object
+		.pipe(g_rename('bundle.min.js'))
+		.pipe(uglify()) // now gulp-uglify works 
+		.pipe(gulp.dest(Paths.DEST_DIST_SRC))
+		.pipe(g_connect.reload());
 })
 
 gulp.task('server', function () {
@@ -105,17 +115,18 @@ gulp.task('server', function () {
 });
 
 gulp.task('less', function () {
-	return gulp.src(Paths.SRC_LESS).
-	pipe(g_less()).
-	pipe(gulp.dest(Paths.DIST));
+	return gulp.src(Paths.SRC_LESS)
+		.pipe(g_less())
+		.pipe(gulp.dest(Paths.DIST));
 });
 
 
 gulp.task('copy-html', () => {
-	gulp.src([Paths.SRC_HTML]).
-	pipe(gulp.dest(Paths.DEST));
+	gulp.src([Paths.SRC_HTML])
+		.pipe(gulp.dest(Paths.DEST));
 });
 
 gulp.task('reload-html', function () {
-	gulp.src([Paths.DEST_HTML]).pipe(g_connect.reload());
+	gulp.src([Paths.DEST_HTML])
+		.pipe(g_connect.reload());
 });

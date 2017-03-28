@@ -84,7 +84,9 @@ module.exports = function (nconf, scanner) {
 		res.json(ret);
 	});
 
-	app.post('/api/register', function (req, res) {});
+	app.post('/api/register', function (req, res) {
+		console.log(req.body);
+	});
 
 	let ip = utils.myIP();
 	let server = http.createServer(app).listen(nconf.get('dash:port'));
@@ -95,5 +97,6 @@ module.exports = function (nconf, scanner) {
 	utils.log('httpd', 'Listening on http://' + chalk.bold(ip + ':' + server.address().port));
 	utils.log('httpd', '    username: \'' + chalk.bold(_username) + '\'');
 	utils.log('httpd', '    password: \'' + chalk.bold(_password) + '\'');
+	utils.log('httpd', '    apiToken: \'' + chalk.bold(_apiToken) + '\'');
 	console.log();
 };

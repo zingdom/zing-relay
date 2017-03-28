@@ -13,7 +13,7 @@ export default class App extends Component {
 		super(props);
 
 		this.state = {
-			open: false
+			popup: null
 		};
 	}
 
@@ -34,16 +34,62 @@ export default class App extends Component {
 		clearInterval(this.interval);
 	}
 
-	close() {
-		this.setState({ open: false });
+	popupOpen(row, isSelected, e) {
+		this.setState({
+			popup: {
+				updated: false,
+				addr: row.addr,
+				name: row.name,
+				nameOrig: row.name,
+				tracked: row.tracked,
+				trackedOrig: row.tracked
+			}
+		})
 	}
 
-	open(row, isSelected, e) {
-		console.log(this.state.open)
-		this.setState({ selected: row, open: true })
+	popupHandleUpdate() {
+		if (!this.state.popup.updated)
+			return this.popupHandleClose();
+
+		console.log('updating...');
+		fetch(API + 'register', wrapRequest({
+			method: 'POST',
+			body: JSON.stringify({
+				addr: this.state.popup.addr,
+				name: this.state.popup.name,
+				tracked: this.state.popup.tracked
+			})
+		}))
+			.then(resp => resp.json())
+			.then(json => {
+				console.log(json);
+				// TODO: display a success message
+				return this.popupHandleClose();
+			})
+			.catch(err => {
+				console.error(err);
+				// TODO: display a failure message
+				return this.popupHandleClose();
+			});
 	}
 
+	popupHandleClose() {
+		this.setState({ popup: null });
+	}
 
+	popupHandleNameChanged(e) {
+		let newPopup = _.extend({}, this.state.popup);
+		newPopup.name = e.target.value;
+		newPopup.updated = newPopup.tracked !== newPopup.trackedOrig || newPopup.name !== newPopup.nameOrig;
+		this.setState({ popup: newPopup });
+	}
+
+	popupHandleTrackingChanged(tracked) {
+		let newPopup = _.extend({}, this.state.popup);
+		newPopup.tracked = tracked;
+		newPopup.updated = newPopup.tracked !== newPopup.trackedOrig || newPopup.name !== newPopup.nameOrig;
+		this.setState({ popup: newPopup });
+	}
 
 	nameFormatter = (cell, row) => {
 		return (
@@ -54,72 +100,64 @@ export default class App extends Component {
 		);
 	}
 
-
 	trackedFormatter = (cell, row) => {
 		return (<span>{row.tracked ? <Check /> : null}</span>
 		);
 	}
 
-
-	handleChange(e) {
-		var newSelected = _.extend({}, this.state.selected);
-		newSelected.name = e.target.value;
-		this.setState({ selected: newSelected });
-	}
-
-	handleTracking(tracked) {
-		var newSelected = _.extend({}, this.state.selected);
-		newSelected.tracked = tracked;
-		this.setState({ selected: newSelected });
-	}
 	render() {
 		const selectRow = {
 			mode: 'radio',
 			hideSelectColumn: true,
 			bgColor: '#fdece8',
 			clickToSelect: true,
-			onSelect: this.open.bind(this)
+			onSelect: this.popupOpen.bind(this)
 		};
 		return (
 			<span>
-				<Modal show={this.state.open} onHide={this.close.bind(this)}>
-					<Modal.Header closeButton >
-						<Modal.Title>{this.state.selected ? "Update " + this.state.selected.addr : "Update Device"}</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						<Alert bsStyle={this.state.tracking ? "info" : "warning"}>
-							<strong className="text-md">Tracking {this.state.tracking ? "On" : "Off"}</strong>
-							{this.state.tracking
-								? <p>While the tracking off you will not be able to see real-time data for this device</p>
-								: <p>While the tracking on you are able to see real-time data for this device</p>}
-
-						</Alert>
-						<form>
-							<FormGroup controlId="formBasicText">
-								<ControlLabel>Device Name</ControlLabel>
-								<FormControl
-									type="text"
-									defaultValue={this.state.selected ? this.state.selected.name : null}
-									placeholder="Enter text"
-									onChange={this.handleChange.bind(this)}
-								/>
-								<FormControl.Feedback />
-							</FormGroup>
-							<p>Enabling tracking will allow the site to collect real-time location data for this device</p>
-							<FormGroup controlId="formBasicText">
-								<ButtonGroup>
-									<Button bsStyle={this.state.selected && this.state.selected.tracked ? "primary" : null} onClick={() => this.handleTracking(true)}>Tracking</Button>
-									<Button bsStyle={this.state.selected && this.state.selected.tracked ? null : "primary"} onClick={() => this.handleTracking(false)}>No Tracking</Button>
-								</ButtonGroup>
-							</FormGroup>
-						</form>
-					</Modal.Body>
-					<Modal.Footer>
-						<Button onClick={this.close.bind(this)}>Close</Button>
-						<Button bsStyle="primary" onClick={this.close.bind(this)}>Update</Button>
-					</Modal.Footer>
-				</Modal>
-
+				{(() => {
+					if (this.state.popup) {
+						return (
+							<Modal show={true} onHide={this.popupHandleClose.bind(this)}>
+								<Modal.Header closeButton>
+									<Modal.Title>{this.state.popup.nameOrig ? "Update " + this.state.popup.nameOrig : "Update Device"}</Modal.Title>
+								</Modal.Header>
+								<Modal.Body>
+									<Alert bsStyle={this.state.popup.tracked ? "info" : "warning"}>
+										<strong className="text-md">Tracking {this.state.popup.tracked ? "On" : "Off"}</strong>
+										{this.state.popup.tracked
+											? <p><code>zing-relay</code> will sync bluetooth packets with the ZING cloud</p>
+											: <p>real-time tracking is disabled for this device</p>}
+									</Alert>
+									<form>
+										<FormGroup controlId="formBasicText">
+											<ControlLabel>Device Name</ControlLabel>
+											<FormControl
+												type="text"
+												autoComplete="off"
+												defaultValue={this.state.popup.name ? this.state.popup.name : null}
+												placeholder="Enter text"
+												onChange={this.popupHandleNameChanged.bind(this)}
+											/>
+											<FormControl.Feedback />
+										</FormGroup>
+										<p>Enabling tracking will allow the site to collect real-time location data for this device</p>
+										<FormGroup controlId="formBasicText">
+											<ButtonGroup>
+												<Button bsStyle={this.state.popup.tracked ? "primary" : null} onClick={() => this.popupHandleTrackingChanged(true)}>Tracking</Button>
+												<Button bsStyle={this.state.popup.tracked ? null : "primary"} onClick={() => this.popupHandleTrackingChanged(false)}>No Tracking</Button>
+											</ButtonGroup>
+										</FormGroup>
+									</form>
+								</Modal.Body>
+								<Modal.Footer>
+									<Button onClick={this.popupHandleClose.bind(this)}>Close</Button>
+									<Button bsStyle={this.state.popup.updated ? 'primary' : null} onClick={this.popupHandleUpdate.bind(this)}>Update</Button>
+								</Modal.Footer>
+							</Modal>
+						);
+					}
+				})()}
 				<Row>
 					<Col lg={6} lgOffset={3} md={8} mdOffset={2} sm={10} smOffset={1} className="p-a-md">
 						<PageHeader>

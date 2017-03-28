@@ -4,8 +4,8 @@ var chalk = require('chalk');
 var express = require('express'),
 	app = express(),
 	cors = require('cors'),
-	session = require('express-session');
-
+	bodyParser = require('body-parser');
+var fetch = require('node-fetch');
 var http = require('http');
 var passport = require('passport'),
 	BasicStrategy = require('passport-http').BasicStrategy;
@@ -39,6 +39,7 @@ module.exports = function (nconf, scanner) {
 
 	let spinner = utils.ora('starting server ...');
 	app.use(cors());
+	app.use(bodyParser.json());
 	app.use(function (req, res, next) {
 		let write = res.write;
 		res.write = function (chunk) {
@@ -86,6 +87,11 @@ module.exports = function (nconf, scanner) {
 
 	app.post('/api/register', function (req, res) {
 		console.log(req.body);
+		res.json({
+			success: true,
+			data: {},
+			duration: 123.4
+		});
 	});
 
 	let ip = utils.myIP();

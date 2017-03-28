@@ -3,7 +3,8 @@
 var chalk = require('chalk');
 var express = require('express'),
 	app = express(),
-	cors = require('cors');
+	cors = require('cors'),
+	session = require('express-session');
 
 var http = require('http');
 var passport = require('passport'),
@@ -15,17 +16,20 @@ var utils = require('./utils');
 
 let _username = null;
 let _password = null;
+let _apiToken = randomstring.generate(16);
 let _connections = [];
 
 passport.use(new BasicStrategy(
-	function (username, password, done) {
-		if (username !== _username || _password != password) {
-			return done(null, false);
+	function (userid, password, verified) {
+		if (userid === _username && password === _password) {
+			return verified(null, {
+				token: _apiToken
+			});
 		}
-
-		return done(null, {
-			username: _username
-		});
+		if (password === _apiToken) {
+			return verified(null, true);
+		}
+		return verified(null, false);
 	}
 ));
 
@@ -35,8 +39,23 @@ module.exports = function (nconf, scanner) {
 
 	let spinner = utils.ora('starting server ...');
 	app.use(cors());
+	app.use(function (req, res, next) {
+		let write = res.write;
+		res.write = function (chunk) {
+			if (req.user) {
+				if (res.getHeader('Content-Type').indexOf('application/javascript') >= 0) {
+					let idx = chunk.indexOf('16CHAR_API_TOKEN');
+					if (idx >= 0) {
+						chunk.write(req.user.token, idx, 16);
+					}
+				}
+			}
+			write.apply(this, arguments);
+		};
+		return next();
+	});
 	app.use('/', passport.authenticate('basic', {
-			session: true
+			session: false
 		}),
 		express.static('public_html'));
 

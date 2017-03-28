@@ -36,7 +36,7 @@ module.exports = function (nconf, scanner) {
 	let spinner = utils.ora('starting server ...');
 	app.use(cors());
 	app.use('/', passport.authenticate('basic', {
-			session: false
+			session: true
 		}),
 		express.static('public_html'));
 

@@ -1,5 +1,5 @@
 
-export const API = 'http://192.168.86.108:12345/api/';
+export const API = '/api/';
 export function wrapRequest(request) {
 	if (!request) {
 		request = {
@@ -11,8 +11,7 @@ export function wrapRequest(request) {
 	const headerAdditions = {
 		headers: {
 			'Content-Type': 'application/json',
-			'Accept': 'application/json',
-			'Authorization': 'Basic YWRtaW46ZGJGTVM2NHA='
+			'Accept': 'application/json'
 		}
 	};
 

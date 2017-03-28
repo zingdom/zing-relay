@@ -74,8 +74,8 @@ module.exports = function (nconf, scanner) {
 	spinner.finish('server', 'UP');
 
 	console.log();
-	utils.log('HTTP', 'Listening on http://' + chalk.bold(ip + ':' + server.address().port));
-	utils.log('HTTP', '    username: \'' + chalk.bold(_username) + '\'');
-	utils.log('HTTP', '    password: \'' + chalk.bold(_password) + '\'');
+	utils.log('httpd', 'Listening on http://' + chalk.bold(ip + ':' + server.address().port));
+	utils.log('httpd', '    username: \'' + chalk.bold(_username) + '\'');
+	utils.log('httpd', '    password: \'' + chalk.bold(_password) + '\'');
 	console.log();
 };

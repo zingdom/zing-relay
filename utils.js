@@ -1,10 +1,12 @@
 "use strict";
 
-const chalk = require('chalk');
-const Ora = require('ora');
-const os = require('os');
+var chalk = require('chalk');
+var Ora = require('ora');
+var os = require('os');
+var sll = require('single-line-log').stdout;
 
-let spaces = '                              '; // 30 spaces
+const SPACES = '                              '; // 30 spaces
+let _sllPrev = '';
 
 module.exports.ora = function (opts) {
 	let o = new Ora(opts);
@@ -15,7 +17,7 @@ module.exports.ora = function (opts) {
 			return;
 		}
 
-		let msg = chalk.dim(name + ':') + spaces.substring(0, 7 - name.length) + chalk.bold(value);
+		let msg = chalk.dim(name + ':') + SPACES.substr(0, 7 - name.length) + chalk.bold(value);
 		if (value instanceof Error) {
 			this.fail(msg);
 		} else {
@@ -44,6 +46,25 @@ module.exports.myIP = function () {
 	return addr;
 }
 
+function to_log_header(section) {
+	let len = section.toString().length;
+	let lpad = Math.max(0, 6 - len);
+	let rpad = Math.max(0, 7 - len - lpad);
+	let s = '[' + SPACES.substr(0, lpad) + section + SPACES.substr(0, rpad) + ']';
+
+	return chalk.dim(s) + SPACES.substring(0, 9 - s.length);
+}
+
 module.exports.log = function (section, msg) {
-	console.log(chalk.dim('[ ' + section + ' ]') + spaces.substring(0, 5 - section.length), msg);
+	sll(null);
+	console.log(to_log_header(section), msg);
+}
+
+module.exports.sll = function (section, msg) {
+	if (typeof msg === 'undefined') {
+		msg = _sllPrev;
+	}
+	_sllPrev = msg;
+
+	sll(to_log_header(section), msg);
 }

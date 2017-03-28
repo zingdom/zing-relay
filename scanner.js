@@ -1,7 +1,7 @@
 "use strict";
 
 var chalk = require('chalk');
-var https = require('https');
+var fetch = require('node-fetch');
 var getmac = require('getmac');
 var LRU = require('lru-cache');
 var mqtt = require('mqtt');
@@ -99,36 +99,16 @@ class Scanner {
 			return new Promise(function (resolve, reject) {
 				let spinner = utils.ora('connecting to zing...').start();
 
-				let reqOpts = {
-					host: 'api.zing.fm',
-					port: 443,
-					path: sprintf('/v1/ext/%s', token),
-					headers: {
-						accept: 'application/json'
-					}
-				};
-				let req = https.request(reqOpts, function (res) {
-					let body = [];
-					res.on('data', function (chunk) {
-						body.push(chunk);
+				fetch(sprintf('https://api.zing.fm/v1/ext/%s', token))
+					.then(res => res.json())
+					.then(json => {
+						spinner.finish('token', 'VERIFIED');
+						resolve(json.data);
+					})
+					.catch(err => {
+						spinner.finish('token', err);
+						reject(err);
 					});
-					res.on('end', function () {
-						let json = JSON.parse(Buffer.concat(body));
-						if (json.success && json.data) {
-							spinner.finish('token', 'VERIFIED');
-							resolve(json.data);
-						} else {
-							let err = new Error(json);
-							spinner.finish('token', err);
-							reject(err);
-						}
-					});
-				});
-				req.on('error', function (err) {
-					spinner.finish('token', err);
-					reject(err);
-				});
-				req.end();
 			});
 		}
 	}
@@ -279,12 +259,15 @@ class Scanner {
 	}
 
 	_tick() {
-		this.tickCounter++;
+		++this.tickCounter;
+		utils.sll(this.tickCounter);
+
 		if (this.tickCounter % 100 === 1) {
 			if (this.mqAccess) {
-				this._updateTrackedList(this.mqAccess.id)
-					.then(list => {
-						this.tracked = list;
+				fetch(sprintf('https://api.zing.fm/v1/ext/%s/device', this.mqAccess.id))
+					.then(res => res.json())
+					.then(json => {
+						this.tracked = json.data;
 					})
 					.catch(err => {
 						utils.log('API', err);
@@ -313,7 +296,7 @@ class Scanner {
 				buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
 				buffer[15] = value.rssi_count;
 
-				utils.log('MQTT', buffer);
+				utils.log(this.tickCounter, 'MQTT: ' + buffer.toString('hex'));
 
 				let topic = sprintf('site/%s/relay/%s', this.mqAccess.siteKey, this.myAddr);
 				this.mqClient.publish(topic, buffer);

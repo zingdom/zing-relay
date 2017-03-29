@@ -1,10 +1,9 @@
-"use strict";
+'use strict';
 
 var chalk = require('chalk');
 var express = require('express'),
 	bodyParser = require('body-parser'),
 	app = express();
-var fetch = require('node-fetch');
 var http = require('http');
 var passport = require('passport'),
 	BasicStrategy = require('passport-http').BasicStrategy;
@@ -77,7 +76,7 @@ module.exports = function (scanner, port, password) {
 
 	app.get('/api/discover', function (req, res) {
 		let ret = [];
-		scanner.nearbyDeviceCache.forEach(function (value, key) {
+		scanner.nearbyDeviceCache.forEach(function (value) {
 			ret.push(value);
 		});
 		res.json(ret);

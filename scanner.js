@@ -1,17 +1,12 @@
-"use strict";
+'use strict';
 
-var chalk = require('chalk');
 var fetch = require('node-fetch');
-var _ = require('lodash');
 var LRU = require('lru-cache');
 var mqtt = require('mqtt');
 var noble = require('noble');
 var os = require('os');
 var sprintf = require('sprintf-js').sprintf;
-var url = require('url');
 var utils = require('./utils');
-
-var KalmanFilter = require('./kalman');
 
 const API_BASE = 'https://api.zing.fm/v1';
 
@@ -163,7 +158,7 @@ class Scanner {
 
 	start() {
 		return Promise.resolve()
-			.then(state => {
+			.then(() => {
 				noble.on('discover', this._nobleOnDiscover.bind(this));
 				noble.startScanning([], true);
 
@@ -185,14 +180,10 @@ class Scanner {
 			})
 			.then(res => res.json())
 			.then(json => {
-				if (json.success && json.data) {
-					resolve(json.data);
-				} else {
-					reject(new Error(json));
-				}
-			})
-			.catch(err => {
-				reject(err);
+				if (!json.success || !json.data)
+					throw new Error(json);
+
+				return (json.data);
 			});
 	}
 
@@ -202,14 +193,10 @@ class Scanner {
 			})
 			.then(res => res.json())
 			.then(json => {
-				if (json.success && json.data) {
-					resolve(json.data);
-				} else {
-					reject(new Error(json));
-				}
-			})
-			.catch(err => {
-				reject(err);
+				if (!json.success || !json.data)
+					throw new Error(json);
+
+				return (json.data);
 			});
 	}
 
@@ -245,7 +232,7 @@ class Scanner {
 		if (typeof addrEntry === 'undefined') {
 			addrEntry = {
 				count: 0
-			}
+			};
 			this.randomAddrFilterCache.set(addr, addrEntry);
 		}
 		addrEntry++;
@@ -313,10 +300,9 @@ class Scanner {
 		}
 
 		this.mqCache
-			.rforEach((value, key) => {
-				if (value.rssi_count === 0) {
-					contine;
-				}
+			.rforEach((value) => {
+				if (value.rssi_count === 0)
+					return;
 
 				this.mqCache.del(value.addr);
 

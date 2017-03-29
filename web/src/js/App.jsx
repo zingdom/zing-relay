@@ -2,11 +2,11 @@ import 'whatwg-fetch';
 import _ from 'lodash';
 import { API, wrapRequest } from './_config';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-import { Row, Col, Jumbotron, Button, PageHeader, Modal, FormGroup, FormControl, ControlLabel, Checkbox, Alert } from 'react-bootstrap';
+import { Row, Col, Jumbotron, Button, PageHeader, Modal, FormGroup, FormControl, ControlLabel, Alert } from 'react-bootstrap';
 import AnimatedNumber from 'react-animated-number';
 import Check from 'react-icons/lib/io/checkmark-round';
 import numeral from 'numeral';
-import React, { Component } from 'react';
+import { Component } from 'react';
 
 export default class App extends Component {
 	constructor(props) {
@@ -30,12 +30,12 @@ export default class App extends Component {
 			.then(resp => resp.json())
 			.then(json => this.setState({ discover: json }))
 			.then(() => {
-				setTimeout(this.refresh.bind(this), 1000)
+				setTimeout(this.refresh.bind(this), 1000);
 			})
 			.catch(err => console.log(err));
 	}
 
-	popupOpen(row, isSelected, e) {
+	popupOpen(row) {
 		this.setState({
 			popup: {
 				updated: false,
@@ -45,7 +45,7 @@ export default class App extends Component {
 				tracked: row.tracked,
 				trackedOrig: row.tracked
 			}
-		})
+		});
 	}
 
 	popupHandleUpdate() {
@@ -128,11 +128,11 @@ export default class App extends Component {
 						return (
 							<Modal show={true} onHide={this.popupHandleClose.bind(this)}>
 								<Modal.Header closeButton>
-									<Modal.Title>{this.state.popup.nameOrig ? "Update " + this.state.popup.nameOrig : "Update Device"}</Modal.Title>
+									<Modal.Title>{this.state.popup.nameOrig ? 'Update ' + this.state.popup.nameOrig : 'Update Device'}</Modal.Title>
 								</Modal.Header>
 								<Modal.Body>
-									<Alert bsStyle={this.state.popup.tracked ? "info" : "warning"}>
-										<strong className="text-md">Tracking {this.state.popup.tracked ? "On" : "Off"}</strong>
+									<Alert bsStyle={this.state.popup.tracked ? 'info' : 'warning'}>
+										<strong className="text-md">Tracking {this.state.popup.tracked ? 'On' : 'Off'}</strong>
 										{this.state.popup.tracked
 											? <p><code>zing-relay</code> will sync bluetooth packets with the ZING cloud</p>
 											: <p>real-time tracking is disabled for this device</p>}
@@ -152,8 +152,8 @@ export default class App extends Component {
 										<p>Enabling tracking will allow the site to collect real-time location data for this device</p>
 										<FormGroup controlId="formBasicText">
 											<ButtonGroup>
-												<Button bsStyle={this.state.popup.tracked ? "primary" : null} onClick={() => this.popupHandleTrackingChanged(true)}>Tracking</Button>
-												<Button bsStyle={this.state.popup.tracked ? null : "primary"} onClick={() => this.popupHandleTrackingChanged(false)}>No Tracking</Button>
+												<Button bsStyle={this.state.popup.tracked ? 'primary' : null} onClick={() => this.popupHandleTrackingChanged(true)}>Tracking</Button>
+												<Button bsStyle={this.state.popup.tracked ? null : 'primary'} onClick={() => this.popupHandleTrackingChanged(false)}>No Tracking</Button>
 											</ButtonGroup>
 										</FormGroup>
 									</form>
@@ -178,15 +178,15 @@ export default class App extends Component {
 							{this.state.info ? this.state.info.name : null}
 						</h4>
 						<Jumbotron className="p-a r-a">
-							<h1 className="server-site text-center"><strong>{this.state.info && this.state.info.mqtt ? this.state.info.mqtt.access.site.name : "-"}</strong></h1>
-							<h3 className="server-status text-center"><strong className={this.state.info && this.state.info.mqtt && this.state.info.mqtt.status == 'connected' ? "success" : "danger"}>{this.state.info && this.state.info.mqtt ? "Server " + this.state.info.mqtt.status : "Server Disconnected"}</strong></h3>
+							<h1 className="server-site text-center"><strong>{this.state.info && this.state.info.mqtt ? this.state.info.mqtt.access.site.name : '-'}</strong></h1>
+							<h3 className="server-status text-center"><strong className={this.state.info && this.state.info.mqtt && this.state.info.mqtt.status == 'connected' ? 'success' : 'danger'}>{this.state.info && this.state.info.mqtt ? 'Server ' + this.state.info.mqtt.status : 'Server Disconnected'}</strong></h3>
 							<h4 className="server-status text-center text-muted"><strong><AnimatedNumber value={this.state.info && this.state.info.mqtt ? this.state.info.mqtt.count : 0}
 								style={{
 									transition: '0.8s ease-out',
 									transitionProperty: 'background-color, color, opacity'
 								}}
 								stepPrecision={0}
-								formatValue={n => { return numeral(n).format('0,0') }}
+								formatValue={n => numeral(n).format('0,0')}
 								duration={300} /> Messages</strong></h4>
 						</Jumbotron>
 						<BootstrapTable data={this.state.discover} striped={true} hover={true} selectRow={selectRow} bordered={false} options={{ defaultSortName: 'rssi', defaultSortOrder: 'desc' }}>

@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 
-"use strict";
+'use strict';
 
 var chalk = require('chalk');
 var figlet = require('figlet');
-var path = require('path');
 var package_json = require('./package.json');
 var Scanner = require('./scanner');
 var server = require('./server');
 var updateNotifier = require('update-notifier');
-var utils = require('./utils');
 
 updateNotifier({
 	pkg: package_json

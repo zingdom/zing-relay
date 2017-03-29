@@ -1,8 +1,7 @@
-import { Router, Route, IndexRoute } from "react-router";
+import { Router } from 'react-router';
 import createBrowserHistory from 'history/createBrowserHistory';
 import App from './App';
-import React, { Component } from 'react';
-import ReactDOM from "react-dom";
+import ReactDOM from 'react-dom';
 
 const history = createBrowserHistory();
 

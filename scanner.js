@@ -2,6 +2,7 @@
 
 var chalk = require('chalk');
 var fetch = require('node-fetch');
+var _ = require('lodash');
 var LRU = require('lru-cache');
 var mqtt = require('mqtt');
 var noble = require('noble');
@@ -214,10 +215,32 @@ class Scanner {
 
 	_nobleOnDiscover(peripheral) {
 		let addr = normalizeAddr(peripheral.uuid);
-		this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
+
+		/*
+		if (peripheral.addressType !== 'public') {
+			let p = _.omitBy(peripheral, function (v, k) {
+				if (k === '_noble') {
+					return true;
+				}
+
+				if (typeof v === 'function' ||
+					typeof v === 'undefined' ||
+					v === null) {
+					return true;
+				}
+
+				return false;
+			});
+			console.dir(p, {
+				colors: true,
+				depth: null
+			});
+		}
+		*/
+		this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement);
 	}
 
-	_cacheAdd(addr, rssi, name) {
+	_cacheAdd(addr, rssi, advertisement) {
 		let addrEntry = this.randomAddrFilterCache.get(addr);
 		if (typeof addrEntry === 'undefined') {
 			addrEntry = {
@@ -237,8 +260,8 @@ class Scanner {
 		}
 		nearbyEntry.rssi = rssi;
 		nearbyEntry.count++;
-		if (name) {
-			nearbyEntry.name = name;
+		if (advertisement.localName) {
+			nearbyEntry.name = advertisement.localName;
 		}
 		this.nearbyDeviceCache.set(addr, nearbyEntry);
 
@@ -250,6 +273,7 @@ class Scanner {
 					'addr': addr,
 					'rssi_total': 0,
 					'rssi_count': 0
+
 				};
 				this.mqCache.set(addr, mqEntry);
 			}
@@ -259,8 +283,8 @@ class Scanner {
 				mqEntry.rssi_total += rssi;
 				mqEntry.rssi_count += 1;
 			}
-			if (name) {
-				mqEntry.name = name;
+			if (advertisement) {
+				mqEntry.advert = advertisement;
 			}
 		}
 	}
@@ -296,14 +320,13 @@ class Scanner {
 
 				this.mqCache.del(value.addr);
 
+				let headerBuffer = new Buffer(8);
 				let age = Math.round((new Date().getTime() - value.time) / 65.536);
-				let buffer = new Buffer(16);
-				buffer[0] = (age >> 8) & 0xFF;
-				buffer[1] = age & 0xFF;
-				addrToBuffer(this.addr, buffer, 2);
-				addrToBuffer(value.addr, buffer, 8);
-				buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
-				buffer[15] = value.rssi_count;
+				headerBuffer[0] = Math.min(0xFF, age);
+				addrToBuffer(value.addr, headerBuffer, 1);
+				headerBuffer[7] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
+
+				let buffer = Buffer.concat([headerBuffer, value.advert.manufacturerData]);
 
 				utils.sll(this.tickCounter, 'MQTT: ' + buffer.toString('hex'));
 

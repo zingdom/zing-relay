@@ -2,15 +2,18 @@
 
 var chalk = require('chalk');
 var fetch = require('node-fetch');
-var getmac = require('getmac');
 var LRU = require('lru-cache');
 var mqtt = require('mqtt');
 var noble = require('noble');
+var os = require('os');
 var sprintf = require('sprintf-js').sprintf;
 var url = require('url');
 var utils = require('./utils');
 
 var KalmanFilter = require('./kalman');
+
+// const API_BASE = 'https://api.zing.fm/v1';
+const API_BASE = 'http://192.168.86.198:7070/v1';
 
 function normalizeAddr(addr) {
 	let a = addr.replace(/[^0-9A-Fa-f]/g, '').toLowerCase();
@@ -32,10 +35,12 @@ function addrToBuffer(addr, buffer, index) {
 class Scanner {
 	constructor() {
 		this.tickCounter = 0;
-		this.myAddr = null;
-		this.mqAccess = null;
-		this.mqClient = null;
-		this.mqCounter = 0;
+		this.addr = null;
+		this.name = null;
+		this.token = null;
+		this.extAccess = null;
+		this.mqttClient = null;
+		this.mqttCounter = 0;
 
 		this.tracked = [];
 		this.mqCache = LRU({
@@ -53,7 +58,7 @@ class Scanner {
 		// this.kalman = new KalmanFilter(0.01, 5, 1);
 	}
 
-	_promiseSetupNoble() {
+	_setupNoble() {
 		return new Promise(function (resolve, reject) {
 			let spinner = utils.ora('initializing BLE...').start();
 
@@ -70,40 +75,36 @@ class Scanner {
 				if (noble.state === 'poweredOn') {
 					spinner.finish('BLE', 'READY');
 					clearInterval(handle);
-					resolve(noble.state);
+					resolve(noble.address);
 				}
 			}, 500);
 		});
 	}
 
-	_promiseGetMac() {
-		return new Promise(function (resolve, reject) {
-			let spinner = utils.ora('getting address...').start();
-
-			getmac.getMac((err, addr) => {
-				if (err) {
-					spinner.finish('self', err);
-					reject(err);
-					return;
-				}
-				addr = normalizeAddr(addr);
-
-				spinner.finish('self', addr);
-				resolve(addr);
-			});
-		});
-	}
-
-	_promiseVerifyToken(token) {
+	_verifyToken(token, relayKey, relayName) {
 		if (token) {
 			return new Promise(function (resolve, reject) {
 				let spinner = utils.ora('connecting to zing...').start();
 
-				fetch(sprintf('https://api.zing.fm/v1/ext/%s', token))
+				fetch(sprintf('%s/ext/%s', API_BASE, token), {
+						method: 'PUT',
+						headers: {
+							'Accept': 'application/json',
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							key: relayKey,
+							name: relayName
+						})
+					})
 					.then(res => res.json())
 					.then(json => {
-						spinner.finish('token', 'VERIFIED');
-						resolve(json.data);
+						if (json.success && json.data) {
+							spinner.finish('token', 'VERIFIED');
+							resolve(json.data);
+						} else {
+							throw new Error(json);
+						}
 					})
 					.catch(err => {
 						spinner.finish('token', err);
@@ -113,11 +114,11 @@ class Scanner {
 		}
 	}
 
-	_promiseSetupMqttClient(mqAccess) {
+	_setupMqttClient(extAccess) {
 		return new Promise(function (resolve, reject) {
 			let spinner = utils.ora('connecting...').start();
 
-			let mqttUri = sprintf('mqtts://%s:%s@%s', mqAccess.name, mqAccess.password, mqAccess.host);
+			let mqttUri = sprintf('mqtts://%s:%s@%s:%d', extAccess.mqtt.username, extAccess.mqtt.password, extAccess.mqtt.host, extAccess.mqtt.port);
 			let client = mqtt.connect(mqttUri);
 
 			client.on('connect', function () {
@@ -138,25 +139,26 @@ class Scanner {
 		});
 	}
 
-	setup(token) {
+	setup(token, name) {
+		this.token = token || null;
+		this.name = name || os.hostname();
 		return Promise.resolve()
-			.then(this._promiseGetMac)
+			.then(this._setupNoble)
 			.then(addr => {
-				this.myAddr = addr;
+				this.addr = normalizeAddr(addr);
 			})
-			.then(this._promiseVerifyToken.bind(this, token))
-			.then(mqAccess => {
-				if (mqAccess) {
-					this.mqAccess = mqAccess;
-					return this._promiseSetupMqttClient(mqAccess);
+			.then(() => this._verifyToken(token, this.addr, this.name))
+			.then(extAccess => {
+				if (extAccess) {
+					this.extAccess = extAccess;
+					return this._setupMqttClient(extAccess);
 				}
 			})
-			.then(mqClient => {
-				if (mqClient) {
-					this.mqClient = mqClient;
+			.then(mqttClient => {
+				if (mqttClient) {
+					this.mqttClient = mqttClient;
 				}
-			})
-			.then(this._promiseSetupNoble)
+			});
 	}
 
 	start() {
@@ -169,12 +171,50 @@ class Scanner {
 			});
 	}
 
+	registerDevice(deviceKey, deviceName) {
+		return fetch(sprintf('%s/ext/%s/device', API_BASE, this.token), {
+				method: 'PUT',
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					key: deviceKey,
+					name: deviceName
+				})
+			})
+			.then(res => res.json())
+			.then(json => {
+				if (json.success && json.data) {
+					resolve(json.data);
+				} else {
+					reject(new Error(json));
+				}
+			})
+			.catch(err => {
+				reject(err);
+			});
+	}
+
+	unregisterDevice(deviceKey) {
+		return fetch(sprintf('%s/ext/%s/device/%s', API_BASE, this.token, deviceKey), {
+				method: 'DELETE'
+			})
+			.then(res => res.json())
+			.then(json => {
+				if (json.success && json.data) {
+					resolve(json.data);
+				} else {
+					reject(new Error(json));
+				}
+			})
+			.catch(err => {
+				reject(err);
+			});
+	}
+
 	_nobleOnDiscover(peripheral) {
 		let addr = normalizeAddr(peripheral.uuid);
-		if (addr.indexOf('2015') === 0) {
-			console.log(peripheral);
-		}
-
 		this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement.localName);
 	}
 
@@ -226,48 +266,18 @@ class Scanner {
 		}
 	}
 
-	_updateTrackedList(token) {
-		return new Promise(function (resolve, reject) {
-			let reqOpts = {
-				host: 'api.zing.fm',
-				port: 443,
-				path: sprintf('/v1/ext/%s/device', token),
-				headers: {
-					accept: 'application/json'
-				}
-			};
-			https.request(reqOpts, function (res) {
-					let body = [];
-					res.on('data', function (chunk) {
-						body.push(chunk);
-					});
-					res.on('end', function () {
-						let json = JSON.parse(Buffer.concat(body));
-						if (json.success && json.data) {
-							resolve(json.data);
-						} else {
-							let err = new Error(json);
-							reject(err);
-						}
-					});
-				})
-				.on('error', function (err) {
-					reject(err);
-				})
-				.end();
-		});
-	}
-
 	_tick() {
 		++this.tickCounter;
 		utils.sll(this.tickCounter);
 
 		if (this.tickCounter % 100 === 1) {
-			if (this.mqAccess) {
-				fetch(sprintf('https://api.zing.fm/v1/ext/%s/device', this.mqAccess.id))
+			if (this.extAccess) {
+				fetch(sprintf('%s/ext/%s/device', API_BASE, this.token))
 					.then(res => res.json())
 					.then(json => {
-						this.tracked = json.data;
+						if (json.success && json.data) {
+							this.tracked = json.data;
+						}
 					})
 					.catch(err => {
 						utils.log('API', err);
@@ -291,16 +301,16 @@ class Scanner {
 				let buffer = new Buffer(16);
 				buffer[0] = (age >> 8) & 0xFF;
 				buffer[1] = age & 0xFF;
-				addrToBuffer(this.myAddr, buffer, 2);
+				addrToBuffer(this.addr, buffer, 2);
 				addrToBuffer(value.addr, buffer, 8);
 				buffer[14] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
 				buffer[15] = value.rssi_count;
 
 				utils.sll(this.tickCounter, 'MQTT: ' + buffer.toString('hex'));
 
-				let topic = sprintf('s/%s/r/%s', this.mqAccess.siteKey, this.myAddr);
-				this.mqClient.publish(topic, buffer);
-				this.mqCounter++;
+				let topic = sprintf('s/%s/r/%s', this.extAccess.site.key, this.addr);
+				this.mqttClient.publish(topic, buffer);
+				this.mqttCounter++;
 
 				return;
 			});

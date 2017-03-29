@@ -1,45 +1,42 @@
 {
-  "name": "zing-relay",
-  "version": "1.0.3",
-  "description": "ZING Relay for Raspberry Pi",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "bin": {
-    "zing-relay": "./index.js"
-  },
-  "author": "Daniel Wang",
-  "homepage": "https://www.zing.fm",
-  "bugs": {
-    "url": "https://github.com/zingdom/zing-relay/issues"
-  },
-  "license": "GPL-3.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/zingdom/zing-relay.git"
-  },
-  "dependencies": {
-    "body-parser": "^1.17.1",
-    "chalk": "1.x",
-    "cli-table": "0.x",
-    "cors": "2.x",
-    "express": "4.x",
-    "figlet": "1.x",
-    "getmac": "1.x",
-    "lodash": "4.x",
-    "lru-cache": "4.x",
-    "mqtt": "2.x",
-    "nconf": "0.x",
-    "noble": "1.x",
-    "node-fetch": "1.x",
-    "ora": "1.x",
-    "passport": "0.x",
-    "passport-http": "0.x",
-    "randomstring": "1.x",
-    "single-line-log": "1.x",
-    "sprintf-js": "1.x",
-    "update-notifier": "2.x",
-    "yargs": "7.x"
-  }
+	"name": "zing-relay",
+	"version": "1.0.3",
+	"description": "ZING Relay for Raspberry Pi",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"bin": {
+		"zing-relay": "./index.js"
+	},
+	"author": "Daniel Wang",
+	"homepage": "https://www.zing.fm",
+	"bugs": {
+		"url": "https://github.com/zingdom/zing-relay/issues"
+	},
+	"license": "GPL-3.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/zingdom/zing-relay.git"
+	},
+	"dependencies": {
+		"express": "4.x",
+		"body-parser": "1.x",
+		"chalk": "1.x",
+		"cli-table": "0.x",
+		"figlet": "1.x",
+		"lodash": "4.x",
+		"lru-cache": "4.x",
+		"mqtt": "2.x",
+		"noble": "1.x",
+		"node-fetch": "1.x",
+		"ora": "1.x",
+		"passport": "0.x",
+		"passport-http": "0.x",
+		"randomstring": "1.x",
+		"single-line-log": "1.x",
+		"sprintf-js": "1.x",
+		"update-notifier": "2.x",
+		"yargs": "7.x"
+	}
 }

@@ -2,9 +2,8 @@
 
 var chalk = require('chalk');
 var express = require('express'),
-	app = express(),
-	cors = require('cors'),
-	bodyParser = require('body-parser');
+	bodyParser = require('body-parser'),
+	app = express();
 var fetch = require('node-fetch');
 var http = require('http');
 var passport = require('passport'),
@@ -14,10 +13,9 @@ var randomstring = require('randomstring');
 var package_json = require('./package.json');
 var utils = require('./utils');
 
-let _username = null;
+let _username = 'admin';
 let _password = null;
 let _apiToken = randomstring.generate(16);
-let _connections = [];
 
 passport.use(new BasicStrategy(
 	function (userid, password, verified) {
@@ -33,12 +31,11 @@ passport.use(new BasicStrategy(
 	}
 ));
 
-module.exports = function (nconf, scanner) {
-	_username = 'admin';
-	_password = nconf.get('dash:password') || randomstring.generate(8);
+module.exports = function (scanner, port, password) {
+	_password = password || randomstring.generate(8);
 
 	let spinner = utils.ora('starting server ...');
-	app.use(cors());
+
 	app.use(bodyParser.json());
 	app.use(function (req, res, next) {
 		let write = res.write;
@@ -62,15 +59,16 @@ module.exports = function (nconf, scanner) {
 
 	app.get('/api/info', function (req, res) {
 		let info = {
-			mac: scanner.myAddr,
-			version: package_json.version,
+			addr: scanner.addr,
+			name: scanner.name,
+			version: package_json.version
 		};
 
-		if (scanner.mqClient) {
+		if (scanner.mqttClient) {
 			info.mqtt = {
-				status: scanner.mqClient.reconnecting ? 'reconnecting' : (scanner.mqClient.connected ? 'connected' : 'disconnected'),
-				access: scanner.mqAccess,
-				count: scanner.mqCounter
+				status: scanner.mqttClient.reconnecting ? 'reconnecting' : (scanner.mqttClient.connected ? 'connected' : 'disconnected'),
+				access: scanner.extAccess,
+				count: scanner.mqttCounter
 			};
 		}
 
@@ -86,16 +84,35 @@ module.exports = function (nconf, scanner) {
 	});
 
 	app.post('/api/register', function (req, res) {
-		console.log(req.body);
-		res.json({
-			success: true,
-			data: {},
-			duration: 123.4
-		});
+		if (req.body.tracked) {
+			scanner.registerDevice(req.body.addr, req.body.name)
+				.then(success => {
+					res.json({
+						success: success
+					});
+				})
+				.catch(err => {
+					res.json({
+						error: err
+					});
+				});
+		} else {
+			scanner.unregisterDevice(req.body.addr)
+				.then(success => {
+					res.json({
+						success: success
+					});
+				})
+				.catch(err => {
+					res.json({
+						error: err
+					});
+				});
+		}
 	});
 
 	let ip = utils.myIP();
-	let server = http.createServer(app).listen(nconf.get('dash:port'));
+	let server = http.createServer(app).listen(port || 0);
 
 	spinner.finish('server', 'UP');
 
@@ -103,6 +120,5 @@ module.exports = function (nconf, scanner) {
 	utils.log('httpd', 'Listening on http://' + chalk.bold(ip + ':' + server.address().port));
 	utils.log('httpd', '    username: \'' + chalk.bold(_username) + '\'');
 	utils.log('httpd', '    password: \'' + chalk.bold(_password) + '\'');
-	utils.log('httpd', '    apiToken: \'' + chalk.bold(_apiToken) + '\'');
 	console.log();
 };

@@ -4,7 +4,6 @@
 
 var chalk = require('chalk');
 var figlet = require('figlet');
-var nconf = require('nconf');
 var path = require('path');
 var package_json = require('./package.json');
 var Scanner = require('./scanner');
@@ -18,6 +17,15 @@ updateNotifier({
 
 let argv = require('yargs')
 	.strict()
+	.option('token', {
+		alias: 't',
+		describe: '// zing site access token',
+		type: 'string'
+	})
+	.option('name', {
+		describe: '// display name of this relay',
+		type: 'string'
+	})
 	.option('port', {
 		alias: 'p',
 		describe: '// dashboard port',
@@ -28,21 +36,15 @@ let argv = require('yargs')
 		describe: '// dashboard password',
 		type: 'string'
 	})
-	.option('token', {
-		alias: 't',
-		describe: '// zing site token',
-		type: 'string'
-	})
 	.help('help', '// show help')
-	.usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-relay') + ' [config_file]')
+	.usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-relay'))
 	.argv;
 
 let scanner = new Scanner();
 
 Promise.resolve()
-	.then(promiseSetupConfig)
-	.then(scanner.setup.bind(scanner, argv.token))
-	.then(() => server(nconf, scanner))
+	.then(scanner.setup.bind(scanner, argv.token, argv.name))
+	.then(() => server(scanner, argv.port, argv.password))
 	.then(scanner.start.bind(scanner))
 	.catch(function (err) {
 		console.error(chalk.red('ERROR'), err);
@@ -52,61 +54,3 @@ Promise.resolve()
 process.on('SIGINT', function () {
 	process.exit();
 });
-
-function promiseSetupConfig() {
-	let spinner = utils.ora('opening config file');
-
-	return Promise.resolve()
-		.then(() => new Promise(function (resolve, reject) {
-			if (!argv._.length) {
-				nconf.use('memory');
-				resolve(null);
-			} else {
-				let configPath = argv._[0];
-				nconf.file({
-						file: configPath
-					})
-					.load(function (err) {
-						if (err) {
-							spinner.finish('config', err);
-							reject(err);
-							return;
-						}
-
-						resolve(configPath);
-					});
-			}
-		}))
-		.then(configPath => new Promise(function (resolve, reject) {
-			if (typeof argv.port !== 'undefined') {
-				if (argv.port === 0) {
-					nconf.clear('dash:port');
-				} else {
-					nconf.set('dash:port', argv.port);
-				}
-			}
-
-			if (typeof argv.password !== 'undefined') {
-				if (argv.password === '') {
-					nconf.clear('dash:password');
-				} else {
-					nconf.set('dash:password', argv.password);
-				}
-			}
-
-			if (argv.token) {
-				nconf.set('token', argv.token);
-			}
-
-			nconf.save(function (err) {
-				if (err) {
-					spinner.finish('config', err);
-					reject(err);
-					return;
-				}
-
-				spinner.finish('config', configPath ? configPath : '<memory>');
-				resolve(nconf);
-			});
-		}));
-}

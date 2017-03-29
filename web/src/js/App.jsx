@@ -13,25 +13,26 @@ export default class App extends Component {
 		super(props);
 
 		this.state = {
-			popup: null
+			popup: null,
+			discover: []
 		};
 	}
 
 	componentWillMount() {
-		this.interval = setInterval(() => {
-			fetch(API + 'info', wrapRequest())
-				.then(resp => resp.json())
-				.then(json => this.setState({ info: json }));
-			fetch(API + 'discover', wrapRequest())
-				.then(resp => resp.json())
-				.then(json => this.setState({ discover: json }));
-		}
-			// 	.then(() => 
-			, 1000);
+		this.refresh();
 	}
 
-	componentWillUnmount() {
-		clearInterval(this.interval);
+	refresh() {
+		fetch(API + 'info', wrapRequest())
+			.then(resp => resp.json())
+			.then(json => this.setState({ info: json }))
+			.then(() => fetch(API + 'discover', wrapRequest()))
+			.then(resp => resp.json())
+			.then(json => this.setState({ discover: json }))
+			.then(() => {
+				setTimeout(this.refresh.bind(this), 1000)
+			})
+			.catch(err => console.log(err));
 	}
 
 	popupOpen(row, isSelected, e) {
@@ -91,17 +92,24 @@ export default class App extends Component {
 		this.setState({ popup: newPopup });
 	}
 
-	nameFormatter = (cell, row) => {
+	nameFormatter(cell, row) {
 		return (
 			<span>
-				<div><strong>{row.name}</strong></div>
-				<div className="visible-xs text-muted addr">&nbsp;{row.addr}</div>
+				<div>{row.name ? (<strong>{row.name}</strong>) : (<span className="text-muted">&nbsp;</span>)}</div>
+				<div className="visible-xs text-muted addr">{row.addr}</div>
 			</span>
 		);
 	}
 
-	trackedFormatter = (cell, row) => {
-		return (<span>{row.tracked ? <Check /> : null}</span>
+	trackedFormatter(cell, row) {
+		return (
+			<span>{row.tracked ? <Check /> : null}</span>
+		);
+	}
+
+	countFormatter(cell, row) {
+		return (
+			<span>{numeral(row.count).format('0,0')}</span>
 		);
 	}
 
@@ -159,16 +167,18 @@ export default class App extends Component {
 					}
 				})()}
 				<Row>
-					<Col lg={6} lgOffset={3} md={8} mdOffset={2} sm={10} smOffset={1} className="p-a-md">
+					<Col md={8} mdOffset={2} sm={10} smOffset={1} className="p-a-md">
 						<PageHeader>
 							<span className="text-muted">ZING</span> <strong>RELAY</strong>
 							<span className="pull-right">
-								<tt className="text-muted text-xs">{this.state.info ? this.state.info.mac : null}</tt>
-								<tt className="text-muted text-xs">{this.state.info ? " (v" + this.state.info.version + ")" : null}</tt>
+								<span className="text-muted addr text-xs">{this.state.info ? this.state.info.addr : null}</span>
 							</span>
 						</PageHeader>
+						<h4 className="text-center">
+							{this.state.info ? this.state.info.name : null}
+						</h4>
 						<Jumbotron className="p-a r-a">
-							<h1 className="server-site text-center"><strong>{this.state.info && this.state.info.mqtt ? this.state.info.mqtt.access.siteKey : "-"}</strong></h1>
+							<h1 className="server-site text-center"><strong>{this.state.info && this.state.info.mqtt ? this.state.info.mqtt.access.site.name : "-"}</strong></h1>
 							<h3 className="server-status text-center"><strong className={this.state.info && this.state.info.mqtt && this.state.info.mqtt.status == 'connected' ? "success" : "danger"}>{this.state.info && this.state.info.mqtt ? "Server " + this.state.info.mqtt.status : "Server Disconnected"}</strong></h3>
 							<h4 className="server-status text-center text-muted"><strong><AnimatedNumber value={this.state.info && this.state.info.mqtt ? this.state.info.mqtt.count : 0}
 								style={{
@@ -180,11 +190,11 @@ export default class App extends Component {
 								duration={300} /> Messages</strong></h4>
 						</Jumbotron>
 						<BootstrapTable data={this.state.discover} striped={true} hover={true} selectRow={selectRow} bordered={false} options={{ defaultSortName: 'rssi', defaultSortOrder: 'desc' }}>
-							<TableHeaderColumn dataField="addr" isKey={true} dataSort={true} className="hidden-xs" columnClassName='hidden-xs'>Address</TableHeaderColumn>
-							<TableHeaderColumn dataField="tracked" dataSort={true} dataFormat={this.trackedFormatter} dataAlign="center">Tracked</TableHeaderColumn>
+							<TableHeaderColumn dataField="addr" isKey={true} dataSort={true} className="hidden-xs" columnClassName="addr hidden-xs">Address</TableHeaderColumn>
+							<TableHeaderColumn dataField="tracked" dataSort={true} dataFormat={this.trackedFormatter} dataAlign="center" width="25%">Tracked</TableHeaderColumn>
 							<TableHeaderColumn dataField="name" dataFormat={this.nameFormatter} dataSort={true}>Name</TableHeaderColumn>
-							<TableHeaderColumn dataField="rssi" dataSort={true} dataAlign="right">RSSI</TableHeaderColumn>
-							<TableHeaderColumn dataField="count" dataSort={true} dataAlign="right">Count</TableHeaderColumn>
+							<TableHeaderColumn dataField="rssi" dataSort={true} dataAlign="right" width="17%">RSSI</TableHeaderColumn>
+							<TableHeaderColumn dataField="count" dataFormat={this.countFormatter} dataSort={true} dataAlign="right" className="hidden-xs" columnClassName="hidden-xs" width="17%">Count</TableHeaderColumn>
 						</BootstrapTable>
 					</Col>
 				</Row>

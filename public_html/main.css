@@ -27,6 +27,7 @@ td:focus,
 button:focus {
   outline: none !important;
 }
+.relay-name,
 .server-status,
 .server-site,
 .server-count {
@@ -44,6 +45,9 @@ button:focus {
   border-left-width: 0px !important;
   border-right-width: 0px !important;
   border-bottom-color: #bdc3c7 !important;
+}
+.addr {
+  font-family: "Menlo", "Lucida Console", monospace;
 }
 @media (max-width: 600px) {
   .modal-dialog,

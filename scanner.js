@@ -12,8 +12,7 @@ var utils = require('./utils');
 
 var KalmanFilter = require('./kalman');
 
-// const API_BASE = 'https://api.zing.fm/v1';
-const API_BASE = 'http://192.168.86.198:7070/v1';
+const API_BASE = 'https://api.zing.fm/v1';
 
 function normalizeAddr(addr) {
 	let a = addr.replace(/[^0-9A-Fa-f]/g, '').toLowerCase();

@@ -6,7 +6,7 @@ import { Row, Col, Jumbotron, Button, PageHeader, Modal, FormGroup, FormControl,
 import AnimatedNumber from 'react-animated-number';
 import Check from 'react-icons/lib/io/checkmark-round';
 import numeral from 'numeral';
-import { Component } from 'react';
+import React, { Component } from 'react';
 
 export default class App extends Component {
 	constructor(props) {

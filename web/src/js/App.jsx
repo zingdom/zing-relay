@@ -149,7 +149,7 @@ export default class App extends Component {
 											/>
 											<FormControl.Feedback />
 										</FormGroup>
-										<p>Enabling tracking will allow the site to collect real-time location data for this device</p>
+										<p>enabling tracking to allow ZING to collect real-time location data for this device</p>
 										<FormGroup controlId="formBasicText">
 											<ButtonGroup>
 												<Button bsStyle={this.state.popup.tracked ? 'primary' : null} onClick={() => this.popupHandleTrackingChanged(true)}>Tracking</Button>
@@ -192,7 +192,7 @@ export default class App extends Component {
 						<BootstrapTable data={this.state.discover} striped={true} hover={true} selectRow={selectRow} bordered={false} options={{ defaultSortName: 'rssi', defaultSortOrder: 'desc' }}>
 							<TableHeaderColumn dataField="addr" isKey={true} dataSort={true} className="hidden-xs" columnClassName="addr hidden-xs">Address</TableHeaderColumn>
 							<TableHeaderColumn dataField="tracked" dataSort={true} dataFormat={this.trackedFormatter} dataAlign="center" width="25%">Tracked</TableHeaderColumn>
-							<TableHeaderColumn dataField="name" dataFormat={this.nameFormatter} dataSort={true}>Name</TableHeaderColumn>
+							<TableHeaderColumn dataField="name" dataFormat={this.nameFormatter} dataSort={true}>BLE Device Name</TableHeaderColumn>
 							<TableHeaderColumn dataField="rssi" dataSort={true} dataAlign="right" width="17%">RSSI</TableHeaderColumn>
 							<TableHeaderColumn dataField="count" dataFormat={this.countFormatter} dataSort={true} dataAlign="right" className="hidden-xs" columnClassName="hidden-xs" width="17%">Count</TableHeaderColumn>
 						</BootstrapTable>

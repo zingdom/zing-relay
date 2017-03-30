@@ -102,7 +102,7 @@ class Scanner {
 						}
 					})
 					.catch(err => {
-						spinner.finish('token', err);
+						spinner.finish('token', 'Failed to verify');
 						reject(err);
 					});
 			});

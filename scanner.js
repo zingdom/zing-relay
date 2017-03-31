@@ -306,13 +306,15 @@ class Scanner {
 
 				this.mqCache.del(value.addr);
 
-				let headerBuffer = new Buffer(8);
+				let buffer = new Buffer(8);
 				let age = Math.round((new Date().getTime() - value.time) / 65.536);
-				headerBuffer[0] = Math.min(0xFF, age);
-				addrToBuffer(value.addr, headerBuffer, 1);
-				headerBuffer[7] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
+				buffer[0] = Math.min(0xFF, age);
+				addrToBuffer(value.addr, buffer, 1);
+				buffer[7] = (Math.round(value.rssi_total / value.rssi_count) + 256) % 0xFF;
 
-				let buffer = Buffer.concat([headerBuffer, value.advert.manufacturerData]);
+				if (value.advert.manufacturerData) {
+					buffer = Buffer.concat([buffer, value.advert.manufacturerData]);
+				}
 
 				utils.sll(this.tickCounter, 'MQTT: ' + buffer.toString('hex'));
 

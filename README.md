@@ -72,7 +72,7 @@ default password: `raspberry`
 	pi@raspberrypi:~ $ <strong>wget <a href-"http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz">http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz</a></strong>
 	pi@raspberrypi:~ $ <strong>tar xvf bluez-5.44.tar.xz</strong>
 	pi@raspberrypi:~ $ <strong>cd bluez-5.44</strong>
-	pi@raspberrypi:~ $ <strong>./configure</strong>
+	pi@raspberrypi:~ $ <strong>./configure --disable-systemd --enable-deprecated</strong>
 	pi@raspberrypi:~ $ <strong>make</strong>
 	pi@raspberrypi:~ $ <strong>sudo make install</strong>
 	</pre>

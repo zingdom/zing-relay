@@ -1,6 +1,6 @@
 {
 	"name": "zing-relay",
-	"version": "1.0.3",
+	"version": "1.1.1",
 	"description": "ZING Relay for Raspberry Pi",
 	"main": "index.js",
 	"scripts": {

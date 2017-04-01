@@ -37,7 +37,7 @@ class Scanner {
 		this.mqttClient = null;
 		this.mqttCounter = 0;
 
-		this.tracked = [];
+		this.tracked = {};
 		this.mqCache = LRU({
 			max: 64,
 			maxAge: 1000 * 60
@@ -183,7 +183,7 @@ class Scanner {
 				if (!json.success || !json.data)
 					throw new Error(json);
 
-				return (json.data);
+				this.tracked = json.data;
 			});
 	}
 
@@ -196,7 +196,7 @@ class Scanner {
 				if (!json.success || !json.data)
 					throw new Error(json);
 
-				return (json.data);
+				this.tracked = json.data;
 			});
 	}
 
@@ -252,7 +252,7 @@ class Scanner {
 		}
 		this.nearbyDeviceCache.set(addr, nearbyEntry);
 
-		nearbyEntry.tracked = this.tracked.indexOf(addr) >= 0;
+		nearbyEntry.tracked = typeof this.tracked[addr] !== 'undefined';
 		if (nearbyEntry.tracked) {
 			let mqEntry = this.mqCache.get(addr);
 			if (typeof mqEntry === 'undefined') {
@@ -285,9 +285,10 @@ class Scanner {
 				fetch(sprintf('%s/ext/%s/device', API_BASE, this.token))
 					.then(res => res.json())
 					.then(json => {
-						if (json.success && json.data) {
-							this.tracked = json.data;
-						}
+						if (!json.success || !json.data)
+							throw new Error(json);
+
+						this.tracked = json.data;
 					})
 					.catch(err => {
 						utils.log('API', err);

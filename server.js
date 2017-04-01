@@ -60,7 +60,9 @@ module.exports = function (scanner, port, password) {
 		let info = {
 			addr: scanner.addr,
 			name: scanner.name,
-			version: package_json.version
+			version: package_json.version,
+			ticks: scanner.tickCounter,
+			devices: scanner.tracked
 		};
 
 		if (scanner.mqttClient) {

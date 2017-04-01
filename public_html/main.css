@@ -22,6 +22,7 @@ h5 {
 }
 .jumbotron {
   box-shadow: inset 0 0px 0 rgba(0, 0, 0, 0.05) !important;
+  background: #f2f2f2 !important;
 }
 td:focus,
 button:focus {
@@ -32,6 +33,13 @@ button:focus {
 .server-site,
 .server-count {
   text-transform: uppercase;
+}
+.upper {
+  text-transform: uppercase;
+}
+.stat {
+  background-color: #fff;
+  margin: 10px;
 }
 .danger {
   color: #e74c3c;
@@ -49,7 +57,22 @@ button:focus {
 .addr {
   font-family: "Menlo", "Lucida Console", monospace;
 }
+.pointer {
+  cursor: pointer;
+}
+.modal-footer,
+.modal-header {
+  border: none !important;
+}
 @media (max-width: 600px) {
+  .stat {
+    margin-bottom: 10px !important;
+    margin-left: -5px !important;
+    margin-right: -5px !important;
+  }
+  .stat > .detail {
+    font-size: 8pt;
+  }
   .modal-dialog,
   .modal-content {
     min-height: 100vh;
@@ -63,4 +86,11 @@ button:focus {
     right: 0px !important;
     bottom: 0px !important;
   }
+  .modal-footer {
+    position: absolute;
+    bottom: 0px;
+  }
+}
+tr.valign > td {
+  vertical-align: middle !important;
 }

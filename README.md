@@ -111,7 +111,7 @@ default password: `raspberry`
 		export NVM_DIR="$HOME/.nvm"
 		[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 		</pre>
-	As stated, you'll need to log out and back in to see the environment variables take effect, do that now.
+		As stated, you'll need to log out and back in to see the environment variables take effect, do that now.
 		<pre>
 		pi@raspberrypi:~ $ <strong>nvm install --lts node</strong>
 		</pre>

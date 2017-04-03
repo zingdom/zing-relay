@@ -54,7 +54,7 @@ module.exports = function (scanner, port, password) {
 	app.use('/', passport.authenticate('basic', {
 			session: false
 		}),
-		express.static('public_html'));
+		express.static(__dirname + '/public_html'));
 
 	app.get('/api/info', function (req, res) {
 		let info = {

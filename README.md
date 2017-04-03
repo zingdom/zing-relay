@@ -58,30 +58,30 @@ default password: `raspberry`
 
 1. Install bluez from source
 	- Install dependencies first
-	<pre>
-	pi@raspberrypi:~ $ <strong>sudo apt install -y libusb-dev \
-	                                       libdbus-1-dev \
-	                                       libglib2.0-dev \
-	                                       libudev-dev \
-	                                       libical-dev \
-	                                       libreadline-dev</strong>
-	</pre>
+		<pre>
+		pi@raspberrypi:~ $ <strong>sudo apt install -y libusb-dev \
+		                                       libdbus-1-dev \
+		                                       libglib2.0-dev \
+		                                       libudev-dev \
+		                                       libical-dev \
+		                                       libreadline-dev</strong>
+		</pre>
 
 	- Download the latest version of bluez (v5.44) from http://www.bluez.org/download/
-	<pre>
-	pi@raspberrypi:~ $ <strong>wget <a href-"http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz">http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz</a></strong>
-	pi@raspberrypi:~ $ <strong>tar xvf bluez-5.44.tar.xz</strong>
-	pi@raspberrypi:~ $ <strong>cd bluez-5.44</strong>
-	pi@raspberrypi:~ $ <strong>./configure --disable-systemd --enable-deprecated</strong>
-	pi@raspberrypi:~ $ <strong>make</strong>
-	pi@raspberrypi:~ $ <strong>sudo make install</strong>
-	</pre>
+		<pre>
+		pi@raspberrypi:~ $ <strong>wget <a href-"http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz">http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.xz</a></strong>
+		pi@raspberrypi:~ $ <strong>tar xvf bluez-5.44.tar.xz</strong>
+		pi@raspberrypi:~ $ <strong>cd bluez-5.44</strong>
+		pi@raspberrypi:~ $ <strong>./configure --disable-systemd --enable-deprecated</strong>
+		pi@raspberrypi:~ $ <strong>make</strong>
+		pi@raspberrypi:~ $ <strong>sudo make install</strong>
+		</pre>
 
 	- Enable full Bluetooth LE support by
 	editing `bluetooth.service` and add `–experimental` flag to `bluetoothd` service
 		<pre>
 		pi@raspberrypi:~ $ <strong>sudo nano \
-	    	/etc/systemd/system/bluetooth.target.wants/bluetooth.service</strong>
+		    /etc/systemd/system/bluetooth.target.wants/bluetooth.service</strong>
 		</pre>
 
 	- the edited line should look like:
@@ -124,16 +124,16 @@ default password: `raspberry`
 		</pre>
 
 	- verify node is installed
-	<pre>
-	pi@raspberrypi:~ $ <strong>node -v</strong>
-	v7.7.2
-	pi@raspberrypi:~ $
-	</pre>
+		<pre>
+		pi@raspberrypi:~ $ <strong>node -v</strong>
+		v7.7.2
+		pi@raspberrypi:~ $
+		</pre>
 
 	- by default, escalated privileges are required to start/stop bluetooth advertising; to avoid having to run node programs as root or `sudo` each time, grant `cap_net_raw` privileges to the `node` binary:
-	<pre>
-	pi@raspberrypi:~ $ <strong>sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)</strong>
-	</pre>
+		<pre>
+		pi@raspberrypi:~ $ <strong>sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)</strong>
+		</pre>
 
 1. Install `zing-relay`
 	<pre>

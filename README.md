@@ -99,6 +99,14 @@ default password: `raspberry`
 
 
 1. Install Node.js
+	* Install `nvm` (node version manager)  
+	`nvm` is a "simple bash script to manage multiple active node.js versions." More importantly, it's an easy way to compile node from source on platforms without prebuilt binaries, i.e. Pi Zero Wireless (ARMv6hf). Another bonus, it'll allows us to do `npm install -g` later without requiring root/sudo.
+		<pre>
+		pi@raspberrypi:~ $ <strong>curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
+		</strong></pre>
+	(OTOH, if you are on a Pi 3, you can install prebuild binaries directly from node -- see the alternative step below.)
+
+		
 	<pre>
 	pi@raspberrypi:~ $ <strong>curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -</strong>
 	pi@raspberrypi:~ $ <strong>sudo apt install -y nodejs</strong>

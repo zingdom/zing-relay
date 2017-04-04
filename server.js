@@ -35,26 +35,32 @@ module.exports = function (scanner, port, password) {
 
 	let spinner = utils.ora('starting server ...');
 
-	app.use(bodyParser.json());
-	app.use(function (req, res, next) {
-		let write = res.write;
-		res.write = function (chunk) {
-			if (req.user) {
-				if (res.getHeader('Content-Type').indexOf('application/javascript') >= 0) {
-					let idx = chunk.indexOf('16CHAR_API_TOKEN');
-					if (idx >= 0) {
-						chunk.write(req.user.token, idx, 16);
+	app.use(bodyParser.json())
+		.use(function (req, res, next) {
+			res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+			res.header('Expires', '-1');
+			res.header('Pragma', 'no-cache');
+			next();
+		})
+		.use(function (req, res, next) {
+			let write = res.write;
+			res.write = function (chunk) {
+				if (req.user) {
+					if (res.getHeader('Content-Type').indexOf('application/javascript') >= 0) {
+						let idx = chunk.indexOf('16CHAR_API_TOKEN');
+						if (idx >= 0) {
+							chunk.write(req.user.token, idx, 16);
+						}
 					}
 				}
-			}
-			write.apply(this, arguments);
-		};
-		return next();
-	});
-	app.use('/', passport.authenticate('basic', {
-			session: false
-		}),
-		express.static(__dirname + '/public_html'));
+				write.apply(this, arguments);
+			};
+			next();
+		})
+		.use('/', passport.authenticate('basic', {
+				session: false
+			}),
+			express.static(__dirname + '/public_html'));
 
 	app.get('/api/info', function (req, res) {
 		let info = {

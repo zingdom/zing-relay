@@ -67,8 +67,11 @@ su ${SUDO_USER} <<'EOF_EOF_EOF'
 	export NVM_DIR="$HOME/.nvm"
 	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
-	echomsg "installing node..."
+	echomsg "installing Node.js..."
 	nvm install --lts node
+
+	echomsg "give Node.js permission to access bluetooth..."
+	sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
 
 	echomsg "installing zing-relay..."
 	npm install -g zing-relay

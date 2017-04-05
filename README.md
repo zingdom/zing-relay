@@ -45,6 +45,11 @@ default password: `raspberry`
 
 	- Reboot then verify network connectivity
 
+1. **New** a single line script to install everything below:
+	<pre>
+	wget -qO- https://raw.githubusercontent.com/zingdom/zing-relay/master/scripts/install.sh | sudo bash
+	</pre>
+
 1. Update Installed Packages & Firmware
 	<pre>
 	pi@raspberrypi:~ $ <strong>sudo apt update</strong>

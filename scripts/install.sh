@@ -138,7 +138,7 @@ EOF_EOF_EOF
 	echo "[Install]"											>> "$__ZING_RELAY_SERVICE"
 	echo "WantedBy=multi-user.target"							>> "$__ZING_RELAY_SERVICE"
 
-	echo "zing-relay --token \"${SITE_TOKEN}\" --name \"${RELAY_NAME}\"" >> /home/${SUDO_USER}/.zing-relay/start.sh
+	echo "zing-relay --plain --token \"${SITE_TOKEN}\" --name \"${RELAY_NAME}\"" >> /home/${SUDO_USER}/.zing-relay/start.sh
 
 	echoexec systemctl daemon-reload
 	echoexec systemctl enable zing-relay

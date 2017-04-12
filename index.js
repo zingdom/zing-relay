@@ -13,7 +13,7 @@ updateNotifier({
 	pkg: package_json
 }).notify();
 
-GLOBAL.argv = require('yargs')
+global.argv = require('yargs')
 	.strict()
 	.option('token', {
 		alias: 't',
@@ -45,8 +45,8 @@ GLOBAL.argv = require('yargs')
 let scanner = new Scanner();
 
 Promise.resolve()
-	.then(scanner.setup.bind(scanner, GLOBAL.argv.token, GLOBAL.argv.name))
-	.then(() => server(scanner, GLOBAL.argv.port, argv.password))
+	.then(scanner.setup.bind(scanner, global.argv.token, global.argv.name))
+	.then(() => server(scanner, global.argv.port, argv.password))
 	.then(scanner.start.bind(scanner))
 	.catch(function (err) {
 		console.error('[ ERROR ]', err);

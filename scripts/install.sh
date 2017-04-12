@@ -19,7 +19,7 @@ echo
 RELAY_NAME=
 while [[ $RELAY_NAME = "" ]]; do
 	printf "? ${BOLD}Name of this Relay${NC} (e.g. 'Living Rm'): "
-	read -r RELAY_NAME
+	read -r RELAY_NAME < /dev/tty
 	RELAY_NAME="$(echo -e "${RELAY_NAME}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 
 	if [ "$RELAY_NAME" = "" ]; then
@@ -30,7 +30,7 @@ done
 SITE_TOKEN=
 while [[ $SITE_TOKEN = "" ]]; do
 	printf "? ${BOLD}Site Token${NC} (copy from Zing dashboard): "
-	read -r SITE_TOKEN
+	read -r SITE_TOKEN < /dev/tty
 	SITE_TOKEN="$(echo -e "${SITE_TOKEN}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 
 	if [ "$SITE_TOKEN" = "" ]; then

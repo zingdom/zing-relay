@@ -13,7 +13,7 @@ echo '   |__  / (_)  _ __     __ _'
 echo '     / /  | | | '"'"'_ \   / _` |'
 echo '    / /_  | | | | | | | (_| |'
 echo '   /____| |_| |_| |_|  \__, |'
-echo '                       |___/  installer.sh (1.2.5)'
+echo '                       |___/  installer.sh (1.2.6)'
 echo
 
 RELAY_NAME=

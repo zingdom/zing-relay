@@ -53,14 +53,19 @@ module.exports.log = function (section, msg) {
 };
 
 module.exports.sll = function (section, msg) {
-	if (typeof msg === 'undefined') {
-		msg = _sllPrev;
-	}
-	_sllPrev = msg;
-
 	if (GLOBAL.argv.plain) {
+		if (typeof msg === 'undefined') {
+			return;
+		}
+
+		_sllPrev = msg;
 		console.log(to_log_header(section), msg);
 	} else {
+		if (typeof msg === 'undefined') {
+			msg = _sllPrev;
+		}
+		_sllPrev = msg;
+
 		sll(to_log_header(section), msg);
 	}
 };

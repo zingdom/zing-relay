@@ -119,25 +119,29 @@ su ${SUDO_USER} <<'EOF_EOF_EOF'
 	mkdir -p ~/.zing-relay
 	echo '#!/bin/bash' > ~/.zing-relay/start.sh
 	echo ". ${HOME}/.nvm/nvm.sh" >> ~/.zing-relay/start.sh
+	chmod +x ~/.zing-relay/start.sh
 
 EOF_EOF_EOF
 
 	local __ZING_RELAY_SERVICE="/etc/systemd/system/zing-relay.service"
 	echomsg "creating systemd service..."
-	echo "[Unit]" 											> "$__ZING_RELAY_SERVICE"
-	echo "Description=Zing Relay"							>> "$__ZING_RELAY_SERVICE"
-	echo 													>> "$__ZING_RELAY_SERVICE"
-	echo "[Service]" 										>> "$__ZING_RELAY_SERVICE"
-	echo "ExecStart=/home/${SUDO_USER}/start-zing-relay.sh"	>> "$__ZING_RELAY_SERVICE"
-	echo "WorkingDirectory=/home/${SUDO_USER}"				>> "$__ZING_RELAY_SERVICE"
-	echo "IgnoreSIGPIPE=false"								>> "$__ZING_RELAY_SERVICE"
-	echo "KillMode=control-group"							>> "$__ZING_RELAY_SERVICE"
-	echo "User=${SUDO_USER}"								>> "$__ZING_RELAY_SERVICE"
-	echo 													>> "$__ZING_RELAY_SERVICE"
-	echo "[Install]"										>> "$__ZING_RELAY_SERVICE"
-	echo "WantedBy=multi-user.target"						>> "$__ZING_RELAY_SERVICE"
+	echo "[Unit]" 												> "$__ZING_RELAY_SERVICE"
+	echo "Description=Zing Relay"								>> "$__ZING_RELAY_SERVICE"
+	echo 														>> "$__ZING_RELAY_SERVICE"
+	echo "[Service]" 											>> "$__ZING_RELAY_SERVICE"
+	echo "ExecStart=/home/${SUDO_USER}/.zing-relay/start.sh"	>> "$__ZING_RELAY_SERVICE"
+	echo "WorkingDirectory=/home/${SUDO_USER}"					>> "$__ZING_RELAY_SERVICE"
+	echo "IgnoreSIGPIPE=false"									>> "$__ZING_RELAY_SERVICE"
+	echo "KillMode=control-group"								>> "$__ZING_RELAY_SERVICE"
+	echo "User=${SUDO_USER}"									>> "$__ZING_RELAY_SERVICE"
+	echo 														>> "$__ZING_RELAY_SERVICE"
+	echo "[Install]"											>> "$__ZING_RELAY_SERVICE"
+	echo "WantedBy=multi-user.target"							>> "$__ZING_RELAY_SERVICE"
 
 	echo "zing-relay --token \"${SITE_TOKEN}\" --name \"${RELAY_NAME}\"" >> /home/${SUDO_USER}/.zing-relay/start.sh
+	
+	echoexec systemctl daemon-reload
+	echoexec systemctl enable zing-relay
 
 	echomsg "done, reboot to complete the installation"
 	echo

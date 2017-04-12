@@ -45,7 +45,10 @@ module.exports.myIP = function () {
 };
 
 module.exports.log = function (section, msg) {
-	sll(null);
+	if (!GLOBAL.argv.plain) {
+		sll(null);
+	}
+
 	console.log(to_log_header(section), msg);
 };
 
@@ -55,7 +58,11 @@ module.exports.sll = function (section, msg) {
 	}
 	_sllPrev = msg;
 
-	sll(to_log_header(section), msg);
+	if (GLOBAL.argv.plain) {
+		console.log(to_log_header(section), msg);
+	} else {
+		sll(to_log_header(section), msg);
+	}
 };
 
 function to_log_header(section) {
@@ -64,5 +71,5 @@ function to_log_header(section) {
 	let rpad = Math.max(0, 7 - len - lpad);
 	let s = '[' + SPACES.substr(0, lpad) + section + SPACES.substr(0, rpad) + ']';
 
-	return chalk.dim(s) + SPACES.substring(0, 9 - s.length);
+	return (GLOBAL.argv.plain ? s : chalk.dim(s)) + SPACES.substring(0, 9 - s.length);
 }

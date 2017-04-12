@@ -13,7 +13,7 @@ updateNotifier({
 	pkg: package_json
 }).notify();
 
-let argv = require('yargs')
+GLOBAL.argv = require('yargs')
 	.strict()
 	.option('token', {
 		alias: 't',
@@ -34,6 +34,10 @@ let argv = require('yargs')
 		describe: '// dashboard password',
 		type: 'string'
 	})
+	.option('plain', {
+		describe: '// no fancy ANSI output',
+		type: 'boolean'
+	})
 	.help('help', '// show help')
 	.usage(figlet.textSync('ZING') + ' (' + package_json.version + ')\n\n' + ' Usage: ' + chalk.bold('zing-relay'))
 	.argv;
@@ -41,11 +45,11 @@ let argv = require('yargs')
 let scanner = new Scanner();
 
 Promise.resolve()
-	.then(scanner.setup.bind(scanner, argv.token, argv.name))
-	.then(() => server(scanner, argv.port, argv.password))
+	.then(scanner.setup.bind(scanner, GLOBAL.argv.token, GLOBAL.argv.name))
+	.then(() => server(scanner, GLOBAL.argv.port, argv.password))
 	.then(scanner.start.bind(scanner))
 	.catch(function (err) {
-		console.error(chalk.red('ERROR'), err);
+		console.error('[ ERROR ]', err);
 		process.exit(-1);
 	});
 

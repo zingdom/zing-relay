@@ -13,7 +13,7 @@ echo '   |__  / (_)  _ __     __ _'
 echo '     / /  | | | '"'"'_ \   / _` |'
 echo '    / /_  | | | | | | | (_| |'
 echo '   /____| |_| |_| |_|  \__, |'
-echo '                       |___/  installer.sh (1.2.6)'
+echo '                       |___/  installer.sh (1.2.7)'
 echo
 
 RELAY_NAME=
@@ -139,7 +139,7 @@ EOF_EOF_EOF
 	echo "WantedBy=multi-user.target"							>> "$__ZING_RELAY_SERVICE"
 
 	echo "zing-relay --token \"${SITE_TOKEN}\" --name \"${RELAY_NAME}\"" >> /home/${SUDO_USER}/.zing-relay/start.sh
-	
+
 	echoexec systemctl daemon-reload
 	echoexec systemctl enable zing-relay
 

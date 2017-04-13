@@ -129,7 +129,6 @@ class Scanner {
 			});
 			client.on('close', function () {
 				console.error('MQTT closed...');
-				process.exit(-1);
 			});
 		});
 	}
@@ -202,28 +201,6 @@ class Scanner {
 
 	_nobleOnDiscover(peripheral) {
 		let addr = normalizeAddr(peripheral.uuid);
-
-		/*
-		if (peripheral.addressType !== 'public') {
-			let p = _.omitBy(peripheral, function (v, k) {
-				if (k === '_noble') {
-					return true;
-				}
-
-				if (typeof v === 'function' ||
-					typeof v === 'undefined' ||
-					v === null) {
-					return true;
-				}
-
-				return false;
-			});
-			console.dir(p, {
-				colors: true,
-				depth: null
-			});
-		}
-		*/
 		this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement);
 	}
 

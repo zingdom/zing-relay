@@ -27,6 +27,7 @@ global.argv = require('yargs')
 	.option('port', {
 		alias: 'p',
 		describe: '// dashboard port',
+		default: 31415,
 		type: 'number'
 	})
 	.option('password', {

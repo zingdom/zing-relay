@@ -200,8 +200,12 @@ class Scanner {
 	}
 
 	_nobleOnDiscover(peripheral) {
-		let addr = normalizeAddr(peripheral.uuid);
-		this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement);
+		try {
+			let addr = normalizeAddr(peripheral.uuid);
+			this._cacheAdd(addr, peripheral.rssi, peripheral.advertisement);
+		} catch (err) {
+			console.error('_nobleOnDiscover:' + err);
+		}
 	}
 
 	_cacheAdd(addr, rssi, advertisement) {

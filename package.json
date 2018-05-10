@@ -38,5 +38,5 @@
 		"update-notifier": "^2.2.0",
 		"yargs": "^11.0.0"
 	},
-	"false": {}
+	"eslintIgnore": ["node_modules/*", "web/*", "bundle.min.js"]
 }

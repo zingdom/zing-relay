@@ -47,7 +47,7 @@ let scanner = new Scanner();
 
 Promise.resolve()
 	.then(scanner.setup.bind(scanner, global.argv.token, global.argv.name))
-	.then(() => server(scanner, global.argv.port, argv.password))
+	.then(() => server(scanner, global.argv.port, global.argv.password))
 	.then(scanner.start.bind(scanner))
 	.catch(function (err) {
 		console.error('[ ERROR ]', err);
